@@ -6,7 +6,7 @@
 #ifndef STRICT
 #define STRICT
 #endif // !STRICT
-#include <windows.h>
+#include <Windows.h>
 #include <mmsystem.h>
 #include <tchar.h>
 #include <stdio.h> 

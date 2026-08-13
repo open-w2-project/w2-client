@@ -17,7 +17,7 @@
 #pragma warning(push, 0)        
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <Dshow.h>
+#include <dshow.h>
 #pragma warning(pop)
 
 #include <iostream>

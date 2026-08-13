@@ -4,8 +4,8 @@
 // Desc: Enumerates D3D adapters, devices, modes, etc.
 //-----------------------------------------------------------------------------
 #define STRICT
-#include <windows.h>
-#include <D3D9.h>
+#include <Windows.h>
+#include <d3d9.h>
 #include "DXUtil.h"
 #include "D3DEnumeration.h"
 

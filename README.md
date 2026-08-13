@@ -15,7 +15,6 @@ A compilação para x64 é possível, basta que seja utilizado a dependência pa
 ### Visual Studio
 Para compilar o projeto você precisará ter o Visual Studio com os seguintes componentes instalados:
 - Desenvolvimento para desktop com C++
-- ATL do C++ para a versão da toolchain que está sendo utilizada
 
 A única dependência externa do projeto é o DirectX porém o mesmo está incluida no repositório e devidamente configurada.
 

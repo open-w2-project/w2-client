@@ -528,7 +528,7 @@ int TMSkillMeteorStorm::IsVisible()
 
 int TMSkillMeteorStorm::FrameMove(unsigned int dwServerTime)
 {
-	if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+	if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_LOGIN)
 		m_pOwner = nullptr;
 
 	dwServerTime = g_pTimerManager->GetServerTime();

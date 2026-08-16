@@ -4,7 +4,7 @@
 #include "TMCamera.h"
 #include "TMFieldScene.h"
 #include "TMSelectCharScene.h"
-#include "TMSelectServerScene.h"
+#include "TMLoginScene.h"
 #include "TMScene.h"
 #include "GeomObject.h"
 #include "SControlContainer.h"
@@ -36,8 +36,6 @@ ObjectManager::ObjectManager()
 	g_pCurrentScene = nullptr;
 
 	m_eCurrentState = TM_GAME_STATE::TM_NONE_STATE;
-	m_nServerGroupIndex = -1;
-	m_nServerIndex = -1;
 	m_bBilling = 0;
 	m_nTax = 0;
 	m_nAuto = 0;
@@ -718,9 +716,9 @@ void ObjectManager::SetCurrentState(TM_GAME_STATE ieNewState)
 	case TM_GAME_STATE::TM_SELECTCHAR_STATE:
 		pScene = new TMSelectCharScene();
 		break;
-	case TM_GAME_STATE::TM_SELECTSERVER_STATE:
+	case TM_GAME_STATE::TM_LOGIN_STATE:
 	{
-		pScene = new TMSelectServerScene();
+		pScene = new TMLoginScene();
 		TMEffectBillBoard2* pEffect2 = new TMEffectBillBoard2(93, 20000, 1000.0f, 1000.0f, 1000.0f, 0.002f, 0);
 		if (pEffect2)
 		{

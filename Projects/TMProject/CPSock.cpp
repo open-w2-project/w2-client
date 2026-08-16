@@ -1,7 +1,13 @@
 #include "pch.h"
 #include "CPSock.h"
 #include <WinSock2.h>
+#include <ws2tcpip.h>
 #include "Basedef.h"
+
+// The project links wsock32.lib, which is Winsock 1.1 and does not export
+// getaddrinfo. Pull in ws2_32 for it rather than reworking the library list.
+#pragma comment(lib, "ws2_32.lib")
+
 #include "TMGlobal.h"
 #include "TMLog.h"
 
@@ -119,7 +125,7 @@ unsigned int CPSock::StartListen(HWND hWnd, int ip, int port, int WSA)
 	return 1;
 }
 
-unsigned int CPSock::ConnectServer(char* HostAddr, int Port, int ip, int WSA)
+unsigned int CPSock::ConnectServer(const char* HostAddr, int Port, int ip, int WSA)
 {
 	sockaddr_in InAddr;
 	memset((char*)& InAddr, 0, sizeof(InAddr));
@@ -134,9 +140,28 @@ unsigned int CPSock::ConnectServer(char* HostAddr, int Port, int ip, int WSA)
 	if (Sock)
 		CloseSocket();
 
-	InAddr.sin_addr.S_un.S_addr = inet_addr(HostAddr);
-	InAddr.sin_family = AF_INET;
-	InAddr.sin_port = htons(Port);
+	// The endpoint ships with the executable and may be a hostname, so it has to
+	// go through the resolver. inet_addr, which this used to call, only ever
+	// understood a dotted quad. IPv4 only: bind, connect and the retry ladder
+	// below are all sockaddr_in.
+	addrinfo stHints{};
+	stHints.ai_family = AF_INET;
+	stHints.ai_socktype = SOCK_STREAM;
+	stHints.ai_protocol = IPPROTO_TCP;
+
+	char szPort[8]{};
+	sprintf_s(szPort, "%d", Port);
+
+	addrinfo* pResolved = nullptr;
+	if (getaddrinfo(HostAddr, szPort, &stHints, &pResolved) != 0 || !pResolved)
+	{
+		printf("Could not resolve \"%s\"\n", HostAddr);
+		return 0;
+	}
+
+	InAddr = *reinterpret_cast<sockaddr_in*>(pResolved->ai_addr);
+	freeaddrinfo(pResolved);
+
 	SOCKET tSock = socket(2, 1, 0);
 
 	if (tSock == -1)
@@ -196,7 +221,7 @@ unsigned int CPSock::ConnectServer(char* HostAddr, int Port, int ip, int WSA)
 	return 1;
 }
 
-unsigned int CPSock::SingleConnect(char* HostAddr, int Port, int ip, int WSA)
+unsigned int CPSock::SingleConnect(const char* HostAddr, int Port, int ip, int WSA)
 {
 	sockaddr_in InAddr;
 	memset((char*)&InAddr, 0, sizeof(InAddr));

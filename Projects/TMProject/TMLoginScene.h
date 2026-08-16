@@ -9,11 +9,11 @@ class SEditableText;
 class TMRain;
 class TMSnow;
 
-class TMSelectServerScene : public TMScene
+class TMLoginScene : public TMScene
 {
 public:
-	TMSelectServerScene();
-	~TMSelectServerScene();
+	TMLoginScene();
+	~TMLoginScene();
 
 	int InitializeScene() override;
 	int OnControlEvent(unsigned int idwControlID, unsigned int idwEvent) override;
@@ -26,10 +26,6 @@ public:
 	void CamAction();
 	void MoveHuman(int nIndex);
 	void RemoveHuman();
-	void SetAlphaServer(unsigned int dwStartTime, unsigned int dwServerTime, unsigned int dwTerm, int bFade);
-	void SetAlphaLogin(unsigned int dwStartTime, unsigned int dwServerTime, unsigned int dwTerm, int bFade);
-	void SetAlphaVirtualkey(unsigned int dwStartTime, unsigned int dwServerTime, unsigned int dwTerm, int bFade);
-	void InitializeUI();
 
 private:
 	int FrameMoveGameGrade(unsigned int dwServerTime);
@@ -47,16 +43,7 @@ public:
 	SText* m_pLoginPanelText;
 	SText* m_pLoginIDText;
 	SText* m_pLoginPasswordText;
-	SText* m_pSelServerText;
-	SText* m_pSelChannelText;
 	SButton* m_pLoginBtns[3];
-	int m_nMaxGroup;
-	int m_nAdmitGroup;
-	int m_bAdmit;
-	int m_nDay[10];
-	SPanel* m_pGroupPanel[10];
-	SPanel* m_pGroupBlank;
-	SPanel* m_pGroupBtn;
 	int m_bRemove;
 	unsigned int m_dwStartTime;
 	TMRain* m_pRain;
@@ -67,13 +54,6 @@ public:
 	IVector2 m_vecMoveToPos[50];
 	SEditableText* m_pEditID;
 	SEditableText* m_pEditPW;
-	char m_cLogin;
-	unsigned int m_dwLoginTime;
 	unsigned int m_dwLastClickLoginBtnTime;
 	int m_nDemoType;
-	SPanel* m_pNServerSelect;
-	SListBox* m_pNServerGroupList;
-	SListBox* m_pNServerList;
-	SPanel* m_pNGroupPanel[10];
-	SEditableText* m_pEditIDtest;
 };

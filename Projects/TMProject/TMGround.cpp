@@ -2765,7 +2765,7 @@ int TMGround::Render()
     int nMaxX = nClipIndex + nCamPosX;
     int nMaxY = nClipIndex + nCamPosY;
 
-    if (RenderDevice::m_bDungeon >= 0 || g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER || g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_DEMO)
+    if (RenderDevice::m_bDungeon >= 0 || g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_LOGIN || g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_DEMO)
     {
         int nLen = (int)(pCamera->m_fSightLength + 1.0f);
 

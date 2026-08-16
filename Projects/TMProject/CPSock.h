@@ -15,8 +15,8 @@ public:
 
 	bool WSAInitialize();
 	unsigned int StartListen(HWND hWnd, int ip, int port, int WSA);
-	unsigned int ConnectServer(char* HostAddr, int Port, int ip, int WSA);
-	unsigned int SingleConnect(char* HostAddr, int Port, int ip, int WSA);
+	unsigned int ConnectServer(const char* HostAddr, int Port, int ip, int WSA);
+	unsigned int SingleConnect(const char* HostAddr, int Port, int ip, int WSA);
 	int Receive();
 	char* ReadMessage(int* ErrorCode, int* ErrorType);
 	int CloseSocket();

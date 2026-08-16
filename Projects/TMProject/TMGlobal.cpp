@@ -23,9 +23,6 @@ int g_nFontBold = 500;
 float g_ClipNear = 0.69f;
 float g_ClipFar = 540.0f;
 
-int g_nServerCountList[11];
-char g_szServerNameList[11][9];
-char g_szServerName[10][10][9];
 
 char g_UIString[500][64];
 
@@ -111,8 +108,6 @@ int g_nWeather;
 unsigned int CurrentTime;
 int g_nMyHumanSpeed = 3;
 
-int g_NonePKServer;
-int g_pPKServerNum[2] = { 5, 10 };
 
 int g_nTempArray[3] = { (int)(0xF1476E2F), 0, 0 };
 int g_nTempArray2[4] = { (int)(0xF1577A31), 0, 0, 0 };

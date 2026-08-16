@@ -258,7 +258,7 @@
     <ClInclude Include="TMScene.h" />
     <ClInclude Include="TMSea.h" />
     <ClInclude Include="TMSelectCharScene.h" />
-    <ClInclude Include="TMSelectServerScene.h" />
+    <ClInclude Include="TMLoginScene.h" />
     <ClInclude Include="TMShade.h" />
     <ClInclude Include="TMShip.h" />
     <ClInclude Include="TMSkillBash.h" />
@@ -385,7 +385,7 @@
     <ClCompile Include="TMScene.cpp" />
     <ClCompile Include="TMSea.cpp" />
     <ClCompile Include="TMSelectCharScene.cpp" />
-    <ClCompile Include="TMSelectServerScene.cpp" />
+    <ClCompile Include="TMLoginScene.cpp" />
     <ClCompile Include="TMShade.cpp" />
     <ClCompile Include="TMShip.cpp" />
     <ClCompile Include="TMSkillBash.cpp" />

@@ -259,6 +259,7 @@ public:
     char m_cTempChar;
     char m_cReserved;
     size_t m_nMaxStringLen;
+    int m_nDisplayOffset;
     int m_nCursorVisible;
     int m_bPasswd;
     int m_bEncrypt;
@@ -490,25 +491,6 @@ public:
     SText* m_pLevelText;
     SPanel* m_pDirPanel;
     SProgressBar* m_pHpProgress;
-};
-
-class SListBoxServerItem : public SListBoxItem
-{
-public:
-    SListBoxServerItem(int nTextureSet, char* iStrText, unsigned int idwFontColor, float inX, float inY, float inWidth, float inHeight,
-        int nCount, char cCastle, char cGoldBug, int Num);
-    ~SListBoxServerItem();
-    void FrameMove2(stGeomList* pDrawList, TMVector2 ivItemPos, int inParentLayer, int nFlag) override;
-        
-public:
-    SProgressBar* m_pBusyProgress;
-    SPanel* m_pCrownPanel;
-    SPanel* m_pGoldBugPanel;
-    SPanel* m_pAgePanel;
-    int m_nCurrent;
-    char m_cConnected;
-    char m_cCastle;
-    char m_cGoldBug;
 };
 
 class SListBox : public SPanel, public IEventListener

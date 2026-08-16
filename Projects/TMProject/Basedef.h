@@ -1,5 +1,12 @@
 #pragma once
 
+#include <cstddef>
+
+// Account identity is an email address, so it needs far more room than the
+// 16 bytes the account-name field used to carry. Both the address and the
+// password travel at this width.
+constexpr int MAX_ACCOUNT_LENGTH = 64;
+
 constexpr int MAX_CARGO = 128;
 constexpr auto MAX_CARRY = 64;
 constexpr auto MAX_VISIBLE_CARRY = MAX_CARRY - 4;
@@ -7,6 +14,20 @@ constexpr int MAX_STRING = 2000;
 constexpr int MAX_STRING_LENGTH = 128;
 
 constexpr auto TM_CONNECTION_PORT = 8281;
+
+// The server this build talks to. There is no server list any more, so the
+// address ships with the executable. Override it at build time rather than
+// editing this line:
+//     /D W2_SERVER_HOST="\"play.example.com\""
+// A hostname or a dotted quad both work; CPSock resolves whatever it is given.
+#ifndef W2_SERVER_HOST
+#define W2_SERVER_HOST "localhost"
+#endif
+
+// Sent in every login request. Bumped off 1758 when the account name became an
+// email address, so a server can tell the two request shapes apart on this field
+// alone rather than guessing from the message size.
+constexpr int TM_PROTOCOL_VERSION = 1759;
 
 constexpr int MAX_SERVER = 10; // Max number of game servers that can connect to DB server
 constexpr int MAX_SERVERGROUP = 10;	// Max number of servers that can exist
@@ -783,7 +804,7 @@ struct MSG_CNFAccountLogin
 	STRUCT_SELCHAR SelChar;
 	STRUCT_ITEM Cargo[128];
 	int Coin;
-	char AccountName[16];
+	char AccountName[MAX_ACCOUNT_LENGTH];
 	int SSN1;
 	int SSN2;
 };
@@ -863,13 +884,6 @@ struct MSG_BuyToto
 	int B_Score;
 };
 
-struct MSG_CNFRemoveServer
-{
-	MSG_STANDARD Header;
-	char AccountName[16];
-	char TID[52];
-};
-
 constexpr auto MSG_SendItem_Opcode = 0x182;
 struct MSG_SendItem
 {
@@ -898,13 +912,39 @@ constexpr auto MSG_AccountLogin_Opcode = 0x20D;
 struct MSG_AccountLogin
 {
 	MSG_STANDARD Header;
-	char AccountPass[16];
-	char AccountName[16];
-	char TID[52];
+	char AccountPass[MAX_ACCOUNT_LENGTH];
+	char AccountName[MAX_ACCOUNT_LENGTH];
 	int Version;
 	int Force;
 	unsigned int Mac[4];
 };
+
+// The login wire layout is a contract with the server, and every offset below
+// was worked out on paper from the MSVC 32-bit ABI before it was ever compiled.
+// The padding runs are the fragile part: MSG_CNFAccountLogin has four dead bytes
+// at 28 and four more at 1972, both of them there only because STRUCT_SELCHAR
+// ends in long long and is therefore 8-aligned. Nothing about the field list
+// hints at them, so pin the numbers and let the build fail if they move.
+static_assert(sizeof(MSG_STANDARD) == 12, "message header must stay 12 bytes");
+static_assert(sizeof(STRUCT_ITEM) == 8, "item must stay 8 bytes");
+static_assert(sizeof(STRUCT_SCORE) == 48, "score must stay 48 bytes");
+static_assert(sizeof(STRUCT_SELCHAR) == 840, "selected-character block must stay 840 bytes");
+
+static_assert(sizeof(MSG_AccountLogin) == 164, "login request must stay 164 bytes");
+static_assert(offsetof(MSG_AccountLogin, AccountPass) == 12, "login request: password at 12");
+static_assert(offsetof(MSG_AccountLogin, AccountName) == 76, "login request: email at 76");
+static_assert(offsetof(MSG_AccountLogin, Version) == 140, "login request: version at 140");
+static_assert(offsetof(MSG_AccountLogin, Force) == 144, "login request: force at 144");
+static_assert(offsetof(MSG_AccountLogin, Mac) == 148, "login request: fingerprint at 148");
+
+static_assert(sizeof(MSG_CNFAccountLogin) == 1976, "login accepted must stay 1976 bytes");
+static_assert(offsetof(MSG_CNFAccountLogin, SecretCode) == 12, "login accepted: secret code at 12");
+static_assert(offsetof(MSG_CNFAccountLogin, SelChar) == 32, "login accepted: 4 padding bytes at 28");
+static_assert(offsetof(MSG_CNFAccountLogin, Cargo) == 872, "login accepted: cargo at 872");
+static_assert(offsetof(MSG_CNFAccountLogin, Coin) == 1896, "login accepted: coin at 1896");
+static_assert(offsetof(MSG_CNFAccountLogin, AccountName) == 1900, "login accepted: email at 1900");
+static_assert(offsetof(MSG_CNFAccountLogin, SSN1) == 1964, "login accepted: SSN1 at 1964");
+static_assert(offsetof(MSG_CNFAccountLogin, SSN2) == 1968, "login accepted: 4 padding bytes at 1972");
 
 constexpr auto MSG_MessageWhisper_Opcode = 0x334;
 constexpr auto MSG_MessageShout_Opcode = 0xD1D;
@@ -1358,27 +1398,6 @@ struct MSG_ReqSummon
 	MSG_STANDARD Header;
 	int Result;
 	char Name[16];
-};
-
-struct MSG_CNFRemoveServerLogin
-{
-	MSG_STANDARD Header;
-	STRUCT_SELCHAR SelChar;
-	char AccountName[16];
-	STRUCT_ITEM Cargo[128];
-	int Coin;
-	char SecretCode[16];
-	int SSN1;
-	int SSN2;
-	short PosX;
-	short PosY;
-	STRUCT_MOB MOB;
-	unsigned short Slot;
-	unsigned short ClientID;
-	unsigned short Weather;
-	char ShortSkill[16];
-	STRUCT_EXT1 Ext1;
-	STRUCT_EXT2 Ext2;
 };
 
 struct MSG_EnvEffect
@@ -2842,10 +2861,7 @@ extern int g_pHitRate[1024];
 
 extern HWND hWndMain;
 extern char EncodeByte[4];
-extern int g_nChannelWidth;
-extern int g_nServerGroupNum;
 extern char g_pMessageStringTable[MAX_STRING][MAX_STRING_LENGTH];
-extern char g_pServerList[MAX_SERVERGROUP][MAX_SERVERNUMBER][64];
 extern int g_nSelServerWeather;
 extern STRUCT_ITEMLIST g_pItemList[MAX_ITEMLIST];
 extern STRUCT_GUILDZONE g_pGuildZone[MAX_GUILDZONE];
@@ -2867,8 +2883,6 @@ void BASE_InitEffectString();
 int BASE_InitializeBaseDef();
 void BASE_ReadItemPrice();
 void BASE_UnderBarToSpace(char* szStr);
-int BASE_InitializeServerList();
-int	BASE_GetHttpRequest(char* httpname, char* Request, int MaxBuffer);
 int BASE_GetSum(char* p, int size);
 int BASE_GetSum2(char* p, int size);
 int BASE_GetWeekNumber();

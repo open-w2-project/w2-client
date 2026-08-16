@@ -3040,7 +3040,7 @@ int TMHuman::IsMouseOver()
     if (m_dwDelayDel)
         return 0;
 
-    if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_LOGIN)
     {
         m_bMouseOver = 0;
         return 0;
@@ -12644,7 +12644,7 @@ void TMHuman::GetRoute(IVector2 vecTarget, int nCount, int bStop)
                             TMHuman* pObj = g_pCurrentScene->m_pMyHuman;
 
                             if (pObj == this
-                                && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_SELECT_SERVER
+                                && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN
                                 && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_DEMO)
                             {
                                 m_LastSendTargetPos.x = vecTarget.x;
@@ -12759,7 +12759,7 @@ void TMHuman::GetRoute(IVector2 vecTarget, int nCount, int bStop)
 
                                 m_cLastMoveStop = bStop;
                                 if (g_pCurrentScene->m_pMyHuman == this
-                                    && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_SELECT_SERVER
+                                    && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN
                                     && g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_DEMO
                                     && dwServerTime - m_dwOldMovePacketTime > 1000
                                     && bStop != 2)

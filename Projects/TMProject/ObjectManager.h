@@ -22,11 +22,10 @@ public:
 		TM_FIELD_STATE = 0,
 		TM_TEST2_STATE = 1,
 		TM_SEA_STATE = 2,
-		TM_LOGIN_STATE = 3,
 		TM_CREATEID_STATE = 4,
 		TM_SELECTCHAR_STATE = 5,
 		TM_CREATECHAR_STATE = 6,
-		TM_SELECTSERVER_STATE = 7,
+		TM_LOGIN_STATE = 7,
 		TM_DEMO_STATE = 8,
 		TM_FIELD2_STATE = 9,
 	};
@@ -93,10 +92,6 @@ public:
 	char m_strGuildName[4][12];
 	ResourceDef m_ResourceList[MAX_RESOURCE_LIST];
 	TMObject* m_pTargetObject;
-	int m_nServerGroupIndex;
-	int m_nServerIndex;
-	char m_szAccountName[16];
-	char m_szAccountPass[16];
 	char m_szGuildName[12];
 	char m_strErrorMessage[256];
 	TreeNode* m_pRoot;

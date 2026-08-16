@@ -346,7 +346,7 @@ int TMSea::FrameMove(unsigned int dwServerTime)
 
 int TMSea::IsVisible()
 {
-    if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_LOGIN)
         return 1;
 
     if (TMObject::IsVisible() == 1)

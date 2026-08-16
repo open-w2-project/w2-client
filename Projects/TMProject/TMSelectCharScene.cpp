@@ -394,7 +394,7 @@ int TMSelectCharScene::OnControlEvent(unsigned int idwControlID, unsigned int id
 		return 1;
 	}
 	if (idwControlID == 4617 && !idwEvent && m_pMessageBox->m_dwMessage == 65796)
-		g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+		g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 	if (idwControlID >= 66437 && idwControlID <= 66446)
 	{
 		AddvirtualKeyNum(idwControlID - 66437);
@@ -743,7 +743,7 @@ int TMSelectCharScene::OnControlEvent(unsigned int idwControlID, unsigned int id
 		int characterSlot = g_pObjectManager->m_cCharacterSlot;
 		if (m_pMessageBox->m_dwMessage == 65796)
 		{
-			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 			return 1;
 		}
 		if (m_pMessageBox->m_dwMessage == 4615 && characterSlot >= 0 && characterSlot < 4)

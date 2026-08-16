@@ -59,7 +59,6 @@ TMScene::TMScene() : TreeNode(0)
 	m_pTextReadCompose = nullptr;
 	m_pTextReadComposeB = nullptr;
 	m_dwDelayDisconnectTime = 0;
-	m_bMsgRemoveServer = 0;
 
 	for (int i = 0; i < 2; ++i)
 	{
@@ -861,7 +860,7 @@ int TMScene::OnPacketEvent(unsigned int dwCode, char* pSBuffer)
 		}
 
 		if (m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN)
-			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 
 		m_dwDelayDisconnectTime = 0;
 		return 1;
@@ -876,7 +875,7 @@ int TMScene::OnPacketEvent(unsigned int dwCode, char* pSBuffer)
 		}
 
 		if (m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN)
-			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 
 		m_dwDelayDisconnectTime = 0;
 		return 1;
@@ -1149,10 +1148,10 @@ int TMScene::OnPacketEvent(unsigned int dwCode, char* pSBuffer)
 		{
 			char Msg[128]{ 0 };
 			if (m_pMyHuman)
-				sprintf_s(Msg, "%s %d %d %d", pMsgPanel->String, g_pObjectManager->m_nServerIndex, static_cast<int>(m_pMyHuman->m_vecPosition.x), 
+				sprintf_s(Msg, "%s %d %d", pMsgPanel->String, static_cast<int>(m_pMyHuman->m_vecPosition.x),
 					static_cast<int>(m_pMyHuman->m_vecPosition.y));
 			else
-				sprintf_s(Msg, "%s %d", pMsgPanel->String, g_pObjectManager->m_nServerIndex);
+				sprintf_s(Msg, "%s", pMsgPanel->String);
 
 			m_pMessagePanel->SetMessage(Msg, 4000u);
 			m_pMessagePanel->SetVisible(1, 1);
@@ -2660,16 +2659,6 @@ int TMScene::LoadMsgLevel(char* LevelQuest, const char* szFileName, char cType)
 	return 1;
 }
 
-void TMScene::CheckPKNonePK(int nServerIndex)
-{
-	g_NonePKServer = 1;
-	for (int i = 0; i < 2; ++i)
-	{
-		if (nServerIndex == g_pPKServerNum[i])
-			g_NonePKServer = 0;
-	}
-	g_NonePKServer = 0;
-}
 
 void TMScene::LogMsgCriticalError(int Type, int ID, int nMesh, int X, int Y)
 {

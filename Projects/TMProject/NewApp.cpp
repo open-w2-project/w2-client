@@ -60,17 +60,6 @@ NewApp::~NewApp()
 	LOG_FINALIZELOG();
 }
 
-void InitServerName2()
-{
-	memset(g_szServerName, 0, sizeof(g_szServerName));
-	FILE* fpBin = nullptr;
-	fopen_s(&fpBin, ServerName2_Path, "rb");
-	if (fpBin)
-	{
-		fread(g_szServerName, sizeof(g_szServerName), 1u, fpBin);
-		fclose(fpBin);
-	}
-}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -259,8 +248,6 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 
 	RenderDevice::m_nFontSize = _nFontSize;
 	RenderDevice::m_nFontTextureSize = 512;
-	InitServerName2();
-	InitServerName();
 
 	if (m_hWnd == nullptr)
 	{
@@ -494,22 +481,6 @@ HRESULT NewApp::InitDevice()
 	return m_pBlur->InitObject() != 0;
 }
 
-void NewApp::InitServerName()
-{
-	int nTempList[11];
-	memset(g_szServerNameList, 0, sizeof(g_szServerNameList));
-	memset(g_nServerCountList, 0, sizeof(g_nServerCountList));
-	memset(nTempList, 0, sizeof(nTempList));
-
-	FILE* fpBin = nullptr;
-	fopen_s(&fpBin, ServerName_Path, "rb");
-	if (fpBin)
-	{
-		fread(g_szServerNameList, 1, sizeof(g_szServerNameList), fpBin);
-		fread(g_nServerCountList, 1, sizeof(g_nServerCountList), fpBin);
-		fclose(fpBin);
-	}
-}
 
 void NewApp::InitMusicList()
 {
@@ -641,7 +612,7 @@ DWORD NewApp::Run()
 
 					SAFE_DELETE(m_pAviPlayer);
 
-					m_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+					m_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 				}
 				if (m_pObjectManager->m_bCleanUp)
 					m_pObjectManager->CleanUp();
@@ -786,14 +757,7 @@ void NewApp::MixHelp()
 	fclose(fp);
 }
 
-int NewApp::BASE_Initialize_NewServerList()
-{
-	return 1;
-}
 
-void NewApp::InitServerNameMR()
-{
-}
 
 HRESULT NewApp::MsgProc(HWND hWnd, DWORD uMsg, DWORD wParam, int lParam)
 {

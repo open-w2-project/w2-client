@@ -183,7 +183,7 @@
     <ClInclude Include="TMShip.h">
       <Filter>Header Files\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="TMSelectServerScene.h">
+    <ClInclude Include="TMLoginScene.h">
       <Filter>Header Files\Engine\Scenes</Filter>
     </ClInclude>
     <ClInclude Include="TMSelectCharScene.h">
@@ -755,7 +755,7 @@
     <ClCompile Include="TMSelectCharScene.cpp">
       <Filter>Source Files\Engine\Scenes</Filter>
     </ClCompile>
-    <ClCompile Include="TMSelectServerScene.cpp">
+    <ClCompile Include="TMLoginScene.cpp">
       <Filter>Source Files\Engine\Scenes</Filter>
     </ClCompile>
     <ClCompile Include="TMDemoScene.cpp">

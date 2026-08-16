@@ -9,9 +9,8 @@ enum class ESCENE_TYPE
     ESCENE_NONE = 0x0,
     ESCENE_FIELD = 0x7530,
     ESCENE_SELCHAR = 0x7531,
-    ESCENE_LOGIN = 0x7532,
     ESCENE_CREATE_ACCOUNT = 0x7533,
-    ESCENE_SELECT_SERVER = 0x7534,
+    ESCENE_LOGIN = 0x7534,
     ESCENE_DEMO = 0x7535,
 };
 
@@ -94,7 +93,6 @@ public:
     int LoadMsgText3(SListBox* pListBox, const char* szFileName, int nLv, int ntrans);
     unsigned int LoadMsgText4(char* pStr, int dwStrSize, const char* szFileName, int nLv, int ntrans);
     int LoadMsgLevel(char* LevelQuest, const char* szFileName, char cType);
-    void CheckPKNonePK(int nServerIndex);
     void LogMsgCriticalError(int Type, int ID, int nMesh, int X, int Y);
     void DeleteOwnerAllContainer();
 
@@ -143,5 +141,4 @@ public:
     int m_nCameraLoop;
     stCameraTick m_stCameraTick[1000];
     unsigned int m_dwDelayDisconnectTime;
-    int m_bMsgRemoveServer;
 };

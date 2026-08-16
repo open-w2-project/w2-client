@@ -266,7 +266,7 @@ int EventTranslator::CameraEventData()
         return 1;
 
     ESCENE_TYPE dwSceneType = g_pCurrentScene->m_eSceneType;
-    if ((dwSceneType == ESCENE_TYPE::ESCENE_FIELD || dwSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER ||
+    if ((dwSceneType == ESCENE_TYPE::ESCENE_FIELD || dwSceneType == ESCENE_TYPE::ESCENE_LOGIN ||
         dwSceneType == ESCENE_TYPE::ESCENE_DEMO || dwSceneType == ESCENE_TYPE::ESCENE_SELCHAR) &&
         g_pCurrentScene->m_sPlayDemo < 0)
     {

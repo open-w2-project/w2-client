@@ -374,7 +374,7 @@ int TMSky::FrameMove(unsigned int dwServerTime)
         g_pDevice->m_colorBackLight.r = 0.4f;
         g_pDevice->m_colorBackLight.g = 0.4f;
         g_pDevice->m_colorBackLight.b = 0.4f;
-        if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+        if (g_pCurrentScene->m_eSceneType == ESCENE_TYPE::ESCENE_LOGIN)
         {
             g_pDevice->m_fFogStart = TMSky::FogList[9][0];
             g_pDevice->m_fFogEnd = TMSky::FogList[9][1];

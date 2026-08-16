@@ -1011,6 +1011,7 @@ SEditableText::SEditableText(int inTextureSetIndex, const char* istrText, size_t
 	m_cTempChar = 0;
 	m_cReserved = 0;
 	m_nMaxStringLen = inMaxStringLen;
+	m_nDisplayOffset = 0;
 	m_nCursorVisible = 0;
 	m_bPasswd = ibPasswd;
 	m_bEncrypt = 0;
@@ -1326,24 +1327,46 @@ void SEditableText::Update()
 	int nStringLen = strlen(m_strText);
 	int nComposeStringLen = strlen(m_strComposeText);
 
+	char strDisplay[256]{};
+
 	if (m_bPasswd == 0)
 	{
-		strcpy(m_GCText.strString, m_strText);
+		strcpy(strDisplay, m_strText);
 	}
 	else
 	{
 		for (int nIndex = 0; nIndex < nComposeStringLen + nStringLen; ++nIndex)
-			m_GCText.strString[nIndex] = '*';
+			strDisplay[nIndex] = '*';
 
-		m_GCText.strString[nStringLen] = 0;
+		strDisplay[nStringLen] = 0;
 	}
 
+	// Nothing clips text to its control: SText::FrameMove2 uses m_nWidth for
+	// alignment and for the off-screen test, never to bound the draw, so a string
+	// wider than its box spills across whatever sits behind it. Scroll instead,
+	// keeping the tail visible because that is where the caret is. m_strText is
+	// left whole - it is what GetText returns and what callers send on the wire.
+	const int nUsable = static_cast<int>(m_nWidth - (16.0f * RenderDevice::m_fWidthRatio));
+	SIZE stExtent{};
+
+	m_nDisplayOffset = 0;
+	while (strDisplay[m_nDisplayOffset]
+		&& GetTextExtentPoint32(g_pDevice->m_hDC, strDisplay + m_nDisplayOffset,
+			strlen(strDisplay + m_nDisplayOffset), &stExtent)
+		&& stExtent.cx > nUsable)
+	{
+		++m_nDisplayOffset;
+	}
+
+	strcpy(m_GCText.strString, strDisplay + m_nDisplayOffset);
 	m_GCText.pFont->SetText(m_GCText.strString, 0xFFFFFFFF, 0);
 }
 
 void SEditableText::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int inParentLayer, int nFlag)
 {
-	int nStringLen = strlen(m_strText);
+	int nStringLen = static_cast<int>(strlen(m_strText)) - m_nDisplayOffset;
+	if (nStringLen < 0)
+		nStringLen = 0;
 	if (m_bFocused == 1)
 	{
 		++m_nCursorVisible;
@@ -2202,69 +2225,6 @@ void SListBoxPartyItem::FrameMove2(stGeomList* pDrawList, TMVector2 ivItemPos, i
 
 		m_GCText.pFont->SetText(m_GCText.strString, m_GCText.dwColor, 0);
 	}
-
-	SListBoxItem::FrameMove2(pDrawList, ivItemPos, inParentLayer, nFlag);
-}
-
-SListBoxServerItem::SListBoxServerItem(int nTextureSet, char* iStrText, unsigned int idwFontColor, float inX, float inY, float inWidth, float inHeight, int nCount, char cCastle, char cGoldBug, int Num)
-	: SListBoxItem(iStrText,
-		idwFontColor,
-		inX,
-		inY,
-		inWidth,
-		inHeight,
-		0,
-		0x77777777,
-		1,
-		0)
-{
-	m_pBusyProgress = 0;
-	m_nCurrent = 0;
-	m_cCastle = cCastle;
-	m_nCurrent = nCount;
-	m_cConnected = 1;
-	m_pCrownPanel = 0;
-	m_pGoldBugPanel = 0;
-	m_pAgePanel = 0;
-	m_cGoldBug = cGoldBug;
-
-	unsigned int dwCol1 = -1;
-	unsigned int dwCol2 = -1;
-
-	if (m_cCastle == 1)
-		m_pCrownPanel = new SPanel(151, 24.0f + 104.0f, 1.0f, 16.0f, 16.0f, 0xFFFFFFFF, RENDERCTRLTYPE::RENDER_IMAGE_STRETCH);
-	if (m_cGoldBug == 1)
-		m_pGoldBugPanel = new SPanel(316, 24.0f + 122.0f, 1.0f, 16.0f, 16.0f, 0xFFFFFFFF, RENDERCTRLTYPE::RENDER_IMAGE_STRETCH);
-	
-	if (nTextureSet <= -1)
-	{
-		dwCol1 = 0xFFFF0000;
-		dwCol2 = 0xFF222222;
-	}
-	if (nTextureSet <= -2)
-	{
-		dwCol1 = 0xFF00FF99;
-		dwCol2 = 0xFF222222;
-	}
-
-	m_pBusyProgress = new SProgressBar(nTextureSet, nCount, 600, inWidth - 58.0f, 6.0f, 20.0f, 6.0f, dwCol1, dwCol2, 1);
-}
-
-SListBoxServerItem::~SListBoxServerItem()
-{
-	SAFE_DELETE(m_pGoldBugPanel);
-	SAFE_DELETE(m_pCrownPanel);
-	SAFE_DELETE(m_pBusyProgress);
-}
-
-void SListBoxServerItem::FrameMove2(stGeomList* pDrawList, TMVector2 ivItemPos, int inParentLayer, int nFlag)
-{
-	if (m_pCrownPanel != nullptr)
-		m_pCrownPanel->FrameMove2(pDrawList, ivItemPos, inParentLayer, nFlag);
-	if (m_pGoldBugPanel != nullptr)
-		m_pGoldBugPanel->FrameMove2(pDrawList, ivItemPos, inParentLayer, nFlag);
-	if (m_pBusyProgress != nullptr)
-		m_pBusyProgress->FrameMove2(pDrawList, ivItemPos, inParentLayer, nFlag);
 
 	SListBoxItem::FrameMove2(pDrawList, ivItemPos, inParentLayer, nFlag);
 }

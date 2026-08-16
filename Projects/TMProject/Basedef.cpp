@@ -3,7 +3,6 @@
 #include "TMGlobal.h"
 #include "TMLog.h"
 #include "ItemEffect.h"
-#include <WinInet.h>
 
 char g_pAffectTable[MAX_EFFECT_STRING_TABLE][24];
 char g_pAffectSubTable[MAX_SUB_EFFECT_STRING_TABLE][24];
@@ -11,9 +10,6 @@ int g_pHitRate[1024];
 
 HWND hWndMain;
 char EncodeByte[4];
-int g_nChannelWidth;
-int g_nServerGroupNum;
-char g_pServerList[MAX_SERVERGROUP][MAX_SERVERNUMBER][64];
 int g_nSelServerWeather;
 char g_pMessageStringTable[MAX_STRING][MAX_STRING_LENGTH];
 STRUCT_ITEMLIST g_pItemList[MAX_ITEMLIST];
@@ -351,8 +347,7 @@ void BASE_InitEffectString()
 int BASE_InitializeBaseDef()
 {
   int ret = 0;
-  ret = BASE_InitializeServerList() & 1;
-  ret = BASE_ReadSkillBin() & ret;
+  ret = BASE_ReadSkillBin() & 1;
   ret = BASE_ReadItemList() & ret;
   ret = BASE_ReadInitItem() & ret;
   ret = BASE_InitializeAttribute() & ret;
@@ -394,32 +389,6 @@ void BASE_UnderBarToSpace(char* szStr)
 	}
 }
 
-int BASE_GetHttpRequest(char* httpname, char* Request, int MaxBuffer)
-{   
-    auto hSession = InternetOpen("MS", 0, 0, 0, 0);
-    if (!hSession)
-        return 0;
-
-    auto hHttpFile = InternetOpenUrl(hSession, httpname, 0, 0, 0x4000000u, 0);
-
-    if (!hHttpFile)
-    {
-        GetLastError();
-        InternetCloseHandle(hSession);
-        return 0;
-    }
-
-    DWORD dwBytesRead = 0;
-    InternetReadFile(hHttpFile, Request, MaxBuffer, &dwBytesRead);
-    InternetCloseHandle(hHttpFile);
-    if (dwBytesRead >= 1024)
-        dwBytesRead = 1023;
-
-    Request[dwBytesRead] = 0;
-    InternetCloseHandle(hSession);
-
-    return 1;
-}
 
 int BASE_GetWeekNumber()
 {
@@ -1329,28 +1298,6 @@ int IsClearString2(char* str, int nTarget)
 	return 0;
 }
 
-int BASE_InitializeServerList()
-{
-	FILE* fpBin = nullptr;
-	fopen_s(&fpBin, "./serverlist.bin", "rb");
-
-	if (fpBin)
-	{
-		char szList[65] = { "¤¡¤¤¤§¤©¤±¤²¤µ¤·¤¸¤º¤»¤¼¤½¤¾¤¿¤Á¤Ã¤Å¤Ç¤Ë¤Ì¤Ð¤Ñ¤Ó¤¿¤Ä¤Ó¤Ç¤Ì°¡³ª´Ù"};
-
-		memset(&g_pServerList, 0, sizeof g_pServerList);
-		fread(g_pServerList, 0x6E, 0x40u, fpBin);
-		fclose(fpBin);
-
-		for (int k = 0; k < MAX_SERVERGROUP; k++)
-			for (int j = 0; j < MAX_SERVERNUMBER; j++)
-				for (int i = 0; i < 64; i++)
-					g_pServerList[k][j][i] -= szList[63 - i];
-		return 1;
-	}
-
-	return 0;
-}
 
 int BASE_GetVillage(int x, int y)
 {

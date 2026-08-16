@@ -174,8 +174,6 @@ public:
 	int OnPacketSoundEffect(MSG_STANDARDPARM* pStd);
 	int OnPacketCreateMob(MSG_STANDARD* pStd);
 	int OnPacketCNFCharacterLogout(MSG_STANDARD* pStd);
-	int OnPacketCNFRemoveServer(MSG_CNFRemoveServer* pStd);
-	int OnPacketCNFAccountLogin(MSG_CNFRemoveServerLogin* pStd);
 	int OnPacketCNFCharacterLogin(MSG_CNFCharacterLogin* pStd);
 	int OnPacketItemSold(MSG_STANDARDPARM2* pStd);
 	int OnPacketUpdateCargoCoin(MSG_STANDARDPARM* pStd);
@@ -597,7 +595,6 @@ public:
 	SButton* m_pMiniMapZoomIn;
 	SButton* m_pMiniMapZoomOut;
 	SPanel* m_pMiniMapServerPanel;
-	SText* m_pMiniMapServerText;
 	SText* m_pInMiniMapPosText[256];
 	SPanel* m_pInMiniMapPosPanel[256];
 	SPanel* m_pShopPanel;
@@ -712,13 +709,6 @@ public:
 	SEditableText* m_pTotoScoreB_Edit;
 	SEditableText* m_pTotoNumber_Edit;
 	MSG_BuyToto m_stToto;
-	SPanel* m_pServerPanel;
-	SPanel* m_pChannelPanel[3];
-	SPanel* m_pChannelPanelCenter[3];
-	SPanel* m_pChannelPanelBottom[3];
-	SListBox* m_pServerList;
-	MSG_CNFRemoveServer m_stRemoveServer;
-	int m_nServerMove;
 	SPanel* m_pPotalPanel;
 	SListBox* m_pPotalList;
 	SText* m_pPotalText;

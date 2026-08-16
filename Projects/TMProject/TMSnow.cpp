@@ -79,7 +79,7 @@ int TMSnow::Render()
 
     TMVector2 vecCam{ 0.0f, 0.0f };
     auto* pObj = g_pObjectManager->m_pCamera->GetFocusedObject();
-    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_LOGIN)
     {
         vecCam.x = g_pObjectManager->m_pCamera->m_cameraPos.x - 0.5f;
         vecCam.y = g_pObjectManager->m_pCamera->m_cameraPos.z + 4.5f;
@@ -109,7 +109,7 @@ int TMSnow::Render()
     m_vertex[3].position = (vecNegXAxis + vecNegYAxis) * m_fScale;
 
     float fCamHeight = 0.0f;
-    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_LOGIN)
         fCamHeight = g_pObjectManager->m_pCamera->m_cameraPos.y - 2.0f;
     else if (pObj)
         fCamHeight = pObj->m_fHeight;
@@ -164,7 +164,7 @@ int TMSnow::FrameMove(unsigned int dwServerTime)
 
     TMVector2 vecCam{};
     auto pObj = g_pObjectManager->m_pCamera->GetFocusedObject();
-    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_LOGIN)
     {
         vecCam.x = g_pObjectManager->m_pCamera->m_cameraPos.x - 0.5f;
         vecCam.y = g_pObjectManager->m_pCamera->m_cameraPos.z + 4.5f;
@@ -181,7 +181,7 @@ int TMSnow::FrameMove(unsigned int dwServerTime)
     }
 
     float fCamHeight = 0.0f;
-    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+    if (g_pCurrentScene && g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_LOGIN)
         fCamHeight = g_pObjectManager->m_pCamera->m_cameraPos.y - 2.0f;
     else if (pObj)
         fCamHeight = pObj->m_fHeight;
@@ -202,7 +202,7 @@ int TMSnow::FrameMove(unsigned int dwServerTime)
         }
         else if (g_pCurrentScene)
         {
-            if (g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_SELECT_SERVER)
+            if (g_pCurrentScene->GetSceneType() == ESCENE_TYPE::ESCENE_LOGIN)
             {
                 m_vecSnowPosition[i].y = (fCamHeight + 7.0f) + ((float)(rand() % 10) * 0.5f);
                 m_vecSnowPosition[i].x = (4.0f - ((float)(rand() % 32) / 3.0f)) + vecCam.x;

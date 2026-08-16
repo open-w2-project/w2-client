@@ -413,9 +413,6 @@ TMFieldScene::TMFieldScene()
 	m_bClbutton = 0;
 	m_dwKhepraID = 0;
 
-	memset(&m_stRemoveServer, 0, sizeof(m_stRemoveServer));
-
-	m_nServerMove = 0;
 	m_pPotalPanel = 0;
 	m_pPotalList = 0;
 	m_pPotalText = 0;
@@ -542,7 +539,7 @@ TMFieldScene::~TMFieldScene()
 	}
 
 	if (g_pCurrentScene
-		&& g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_SELECT_SERVER
+		&& g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN
 		&& g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_FIELD
 		&& g_pCurrentScene->m_eSceneType != ESCENE_TYPE::ESCENE_DEMO
 		&& g_pApp->m_pBGMManager)
@@ -1821,7 +1818,6 @@ int TMFieldScene::InitializeScene()
 		m_pMainInfo2_Name->SetText(m_pMyHuman->m_szName, 1);
 
 	m_pMiniMapServerPanel = (SPanel*)m_pControlContainer->FindControl(6136);
-	m_pMiniMapServerText = (SText*)m_pControlContainer->FindControl(6137);
 	m_pMiniMapDir = (SPanel*)m_pControlContainer->FindControl(291);
 
 	SButton* pMiniMapBtn = (SButton*)m_pControlContainer->FindControl(296);
@@ -1974,13 +1970,6 @@ int TMFieldScene::InitializeScene()
 			SendOneMessage((char*)&stWhisper, sizeof(stWhisper));
 		}
 	}
-
-	m_pServerPanel = (SPanel*)m_pControlContainer->FindControl(12288);
-	m_pServerList = (SListBox*)m_pControlContainer->FindControl(12289);
-
-	m_pServerPanel->SetPos((float)(g_pDevice->m_dwScreenWidth >> 1) - (m_pServerPanel->m_nWidth / 2.0f),
-		(float)(g_pDevice->m_dwScreenHeight >> 1) - (m_pServerPanel->m_nHeight / 2.0f));
-	m_pServerPanel->SetVisible(0);
 
 	if (g_nKeyType == 1)
 		m_pControlContainer->SetFocusedControl(m_pEditChat);
@@ -3798,187 +3787,6 @@ int TMFieldScene::OnControlEvent(unsigned int idwControlID, unsigned int idwEven
 			m_pMiniBtn->m_bSelected = m_pMiniPanel->m_bVisible;
 		return 0;
 	}
-	if (idwControlID == B_SYS_SERVER)
-	{
-		if (!m_pServerPanel)
-		{
-			m_dwLastSelServer = g_pTimerManager->GetServerTime();
-			MSG_STANDARDPARM stParm{};
-			stParm.Header.ID = m_pMyHuman->m_dwID;
-			stParm.Header.Type = MSG_SysQuit_Opcode;
-			g_pSocketManager->SendOneMessage((char*)&stParm, sizeof(stParm));
-			return 1;
-		}
-
-		m_pSystemPanel->SetVisible(0);
-
-		m_pMessagePanel->SetMessage(g_pMessageStringTable[23], 0);
-		m_pMessagePanel->SetVisible(1, 0);
-
-		auto serverGroup = 0; // v445
-		for (int nn = 0; nn < MAX_SERVERNUMBER; ++nn)
-		{
-			if (!g_pServerList[nn][0][0])
-			{
-				serverGroup = nn - 1;
-				break;
-			}
-		}
-
-		int nDay[10] = { 0 }; // v678;
-
-		_SYSTEMTIME time{};
-		GetLocalTime(&time);
-		int wDay = time.wDay % 10;
-		if (!wDay)
-			wDay = 10;
-
-		for (int i = 0; i < MAX_SERVERGROUP; ++i)
-		{
-			for (int k = 1; k < MAX_SERVERNUMBER; ++k)
-				if (g_pServerList[i][k][0] != 0)
-					++nDay[i];
-
-			if (nDay[i])
-				nDay[i] = !(time.wDay % nDay[i]) ? nDay[i] : time.wDay % nDay[i];
-		}
-
-		auto currentServerGroupIndex = g_pObjectManager->m_nServerGroupIndex; // v438
-
-		char szUserCount[1024] = { 0 };
-		int nUserCount[MAX_SERVERNUMBER] = { 0 };
-		int nUserCount2[MAX_SERVERNUMBER] = { 0 };
-		if (currentServerGroupIndex == serverGroup)
-		{
-			for (int i = serverGroup; i < MAX_SERVERGROUP; ++i)
-				g_pServerList[i][0][0] = 0;
-
-			for (int i = 0; i < serverGroup; ++i)
-			{
-				memset(nUserCount2, -1, sizeof nUserCount2);
-				BASE_GetHttpRequest(g_pServerList[i][0], szUserCount, sizeof szUserCount);
-
-				sscanf_s(szUserCount, "%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n",
-					&nUserCount2[0], &nUserCount2[1], &nUserCount2[2], &nUserCount2[3], &nUserCount2[4], &nUserCount2[5],
-					&nUserCount2[6], &nUserCount2[7], &nUserCount2[8], &nUserCount2[9], &nUserCount2[10]);
-
-				// 
-				nUserCount[nDay[serverGroup- i]] = nUserCount2[nDay[serverGroup - i]];
-				sprintf_s(g_pServerList[currentServerGroupIndex][i + 1], "%s", g_pServerList[serverGroup - i - 1][nDay[serverGroup - i] + 1]);
-			}
-		}
-		else
-		{
-			BASE_GetHttpRequest(g_pServerList[currentServerGroupIndex][0], szUserCount, sizeof szUserCount);
-			sscanf_s(szUserCount, "%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n%d\\n",
-				&nUserCount[0], &nUserCount[1], &nUserCount[2], &nUserCount[3], &nUserCount[4], &nUserCount[5],
-				&nUserCount[6], &nUserCount[7], &nUserCount[8], &nUserCount[9]);
-		}
-
-		m_pMessagePanel->SetVisible(0, 1);
-
-		SListBox* pServerList = m_pServerList;
-		if (pServerList)
-		{
-			pServerList->Empty();
-			for (int num = 1;; ++num)
-			{
-				if (num >= MAX_SERVERNUMBER)
-				{
-					pServerList->SetVisible(1);
-
-					if (m_pServerPanel)
-						m_pServerPanel->SetVisible(1);
-					break;
-				}
-
-				if (g_pServerList[currentServerGroupIndex][num][0])
-				{
-					char iStrText[32] = { 0 }; // original = 14
-					if (serverGroup == currentServerGroupIndex)
-					{
-						if (currentServerGroupIndex - num < 0)
-							continue;
-
-						if (g_szServerName[currentServerGroupIndex - num][nDay[currentServerGroupIndex - num]][0])
-							sprintf_s(iStrText, "%s-%s", g_szServerNameList[currentServerGroupIndex - num], g_szServerName[currentServerGroupIndex - num][nDay[currentServerGroupIndex - num] - 1]);
-						else
-						{
-							sprintf_s(iStrText, "%s-%d", g_szServerNameList[currentServerGroupIndex - num], nDay[currentServerGroupIndex - num]);
-							if (nUserCount[num] > 500)
-							{
-								int len = strlen(iStrText);
-
-								if (len < 14)
-								{
-									for (int n1 = len; n1 < len; ++n1)
-										iStrText[n1] = ' ';
-								}
-
-								iStrText[14] = 0;
-								strcat(iStrText, "FULL");
-							}
-						}
-					}
-					else if (g_szServerNameList[currentServerGroupIndex][0])
-					{
-						if (g_szServerName[currentServerGroupIndex][num - 1][0])
-							sprintf_s(iStrText, "%s-%s", g_szServerNameList[currentServerGroupIndex], g_szServerName[currentServerGroupIndex][num - 1]);
-						else
-						{
-							sprintf_s(iStrText, "%s-%d", g_szServerNameList[currentServerGroupIndex], num);
-
-							if (nUserCount[num] > 600)
-							{
-								int len = strlen(iStrText);
-
-								if (len < 14)
-								{
-									for (int n1 = len; n1 < len; ++n1)
-										iStrText[n1] = ' ';
-								}
-
-								iStrText[14] = 0;
-								strcat(iStrText, "FULL");
-							}
-						}
-					}
-					else
-						sprintf_s(iStrText, g_pMessageStringTable[68], num + 1, num);
-
-					int nCount = nUserCount[num];
-					if (nCount < 0)
-						nCount = 0;
-
-					int nTextureSet = -1;
-					if (nDay[currentServerGroupIndex] == num)
-						nTextureSet = -2;
-
-					if (currentServerGroupIndex == serverGroup)
-						nTextureSet = -2;
-
-					// -1??
-					auto server = new SListBoxServerItem(nTextureSet, iStrText, 0xFFFFFFFF, 0.0f, 0.0f, static_cast<float>(g_nChannelWidth), 16.0f, nCount, 0, 0, num);
-
-					if (nUserCount[num] < 0)
-						server->m_cConnected = 0;
-					pServerList->AddItem(server);
-				}
-				else if (serverGroup == currentServerGroupIndex && num < serverGroup)
-				{
-					char iStrTexr[14] = { 0 };
-					sprintf_s(iStrTexr, g_pMessageStringTable[70]);
-
-					auto server = new SListBoxServerItem(6, iStrTexr, 0xFFFFFFFF, 0.0f, 0.0f, static_cast<float>(g_nChannelWidth), 16.0f, nUserCount2[num], 0, 0, 0);
-					if (nUserCount[num] < 0)
-						server->m_cConnected = 0;
-
-					pServerList->AddItem(server);
-				}
-			}
-		}
-	}
-
 	if (idwControlID == B_QUEST_BUTTON)
 	{
 		if (m_pQuestList[0])
@@ -4633,22 +4441,6 @@ int TMFieldScene::OnControlEvent(unsigned int idwControlID, unsigned int idwEven
 		stParm.Header.Type = 0x3AE;
 		stParm.Parm = 0;
 		SendOneMessage((char*)&stParm, sizeof(stParm));
-		return 1;
-	}
-	if (idwControlID == 12289)
-	{
-		SListBoxServerItem* pItem = (SListBoxServerItem*)m_pServerList->GetItem(idwEvent);
-		if (pItem->m_nCurrent < 500)
-		{
-			m_nServerMove = idwEvent + 1;
-			m_dwLastTeleport = dwServerTime;
-			m_cLastTeleport = 1;
-		}
-		else
-		{
-			m_pMessagePanel->SetMessage(g_pMessageStringTable[25], 4000);
-			m_pMessagePanel->SetVisible(1, 1);
-		}
 		return 1;
 	}
 	if (idwControlID == 12545)
@@ -6355,10 +6147,6 @@ int TMFieldScene::OnPacketEvent(unsigned int dwCode, char* buf)
 		return OnPacketSoundEffect(reinterpret_cast<MSG_STANDARDPARM*>(pStd));
 	case 0x116:
 		return OnPacketCNFCharacterLogout(pStd);
-	case 0x52A:
-		return OnPacketCNFRemoveServer(reinterpret_cast<MSG_CNFRemoveServer*>(pStd));
-	case 0x10A:
-		return OnPacketCNFAccountLogin(reinterpret_cast<MSG_CNFRemoveServerLogin*>(pStd));
 	case 0x114:
 		return OnPacketCNFCharacterLogin(reinterpret_cast<MSG_CNFCharacterLogin*>(pStd));
 	case 0x3E8:
@@ -7108,12 +6896,6 @@ int TMFieldScene::FrameMove(unsigned int dwServerTime)
 			char szPos[64]{};
 			sprintf(szPos, "X: %4d  Y: %4d", (int)m_pMyHuman->m_vecPosition.x, (int)m_pMyHuman->m_vecPosition.y);
 			m_pPositionText->SetText(szPos, 0);
-
-			char szServer[64]{};
-			int nServerGroupIndex = nServerGroupIndex = g_pObjectManager->m_nServerGroupIndex;
-			sprintf(szServer, "%s-%d", g_szServerNameList[nServerGroupIndex], g_pObjectManager->m_nServerIndex);
-			if (m_pMiniMapServerText)
-				m_pMiniMapServerText->SetText(szServer, 0);
 		}
 	}
 
@@ -11796,7 +11578,7 @@ int TMFieldScene::TimeDelay(unsigned int dwServerTime)
 		if (dwServerTime > m_dwLastSelServer + 5000)
 		{
 			m_dwLastSelServer = 0;
-			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+			g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 			return 1;
 		}
 
@@ -11904,24 +11686,9 @@ int TMFieldScene::TimeDelay(unsigned int dwServerTime)
 			m_dwLastTeleport = 0;
 		else if (dwServerTime > m_dwLastTeleport + 5000 && m_cLastTeleport == 1)
 		{
-			if (m_nServerMove)
-			{
-				m_dwDelayDisconnectTime = dwServerTime;
-
-				MSG_MessageWhisper stWhisper{};
-				stWhisper.Header.ID = g_pObjectManager->m_dwCharID;
-				stWhisper.Header.Type = MSG_MessageWhisper_Opcode;
-				sprintf(stWhisper.MobName, "srv");
-				sprintf(stWhisper.String, "%d", m_nServerMove);
-				SendOneMessage((char*)&stWhisper, sizeof(stWhisper));
-				m_nServerMove = 0;
-			}
-			else
-			{
-				SendOneMessage((char*)&m_stUseItem, sizeof(m_stUseItem));
-				memset(&m_stUseItem, 0, sizeof(m_stUseItem));
-				m_dwUseItemTime = dwServerTime;
-			}
+			SendOneMessage((char*)&m_stUseItem, sizeof(m_stUseItem));
+			memset(&m_stUseItem, 0, sizeof(m_stUseItem));
+			m_dwUseItemTime = dwServerTime;
 			m_cLastTeleport = 0;
 		}
 		else
@@ -14494,10 +14261,6 @@ void TMFieldScene::OnESC()
 			if (pSoundData)
 				pSoundData->Play(0, 0);
 		}
-	}
-	else if (m_pServerPanel && m_pServerPanel->IsVisible() == 1)
-	{
-		m_pServerPanel->SetVisible(0);
 	}
 	else if (m_pPotalPanel && m_pPotalPanel->IsVisible() == 1)
 	{
@@ -18653,93 +18416,6 @@ int TMFieldScene::OnPacketCNFCharacterLogout(MSG_STANDARD* pStd)
 	return 1;
 }
 
-int TMFieldScene::OnPacketCNFRemoveServer(MSG_CNFRemoveServer* pStd)
-{
-	if (pStd->Header.ID != g_pObjectManager->m_dwCharID || g_pSocketManager->Sock)
-	{
-		if (pStd->Header.ID == g_pObjectManager->m_dwCharID && g_pSocketManager->Sock)
-		{
-			memcpy(&m_stRemoveServer, pStd, sizeof(m_stRemoveServer));
-			m_bMsgRemoveServer = 1;
-		}
-		return 1;
-	}
-
-	m_pMessagePanel->SetMessage(g_pMessageStringTable[7], 0);
-	m_pMessagePanel->SetVisible(1, 0);
-
-	g_bMoveServer = 0;
-	int nServer = 0;
-
-	sscanf(pStd->TID, "*%d", &nServer);
-	g_pObjectManager->m_nServerIndex = nServer;
-	CheckPKNonePK(g_pObjectManager->m_nServerIndex);
-	sprintf(g_pApp->m_szServerIP, "%s", g_pServerList[g_pObjectManager->m_nServerGroupIndex][nServer]);
-
-	if (g_pSocketManager->ConnectServer(g_pApp->m_szServerIP, TM_CONNECTION_PORT, 0, 1124))
-	{
-		MSG_AccountLogin stAccountLogin{};
-		stAccountLogin.Header.ID = 0;
-		stAccountLogin.Header.Type = MSG_AccountLogin_Opcode;
-		stAccountLogin.Version = 1758;
-		stAccountLogin.Force = 1;
-
-		ULONG dwSize = 0;
-		IP_ADAPTER_INFO stInfo{};
-		GetAdaptersInfo(&stInfo, &dwSize);
-		if (dwSize)
-		{
-			PIP_ADAPTER_INFO pInfo = (PIP_ADAPTER_INFO)malloc(dwSize);
-			GetAdaptersInfo(pInfo, &dwSize);
-
-			char* sour = pInfo->AdapterName;
-			int tpos = 0;
-			int grid = 0;
-			char temp[256]{};
-			for (size_t i = 0; i < strlen(pInfo->AdapterName); ++i)
-			{
-				if (sour[i] != '{' && sour[i] != '}' && sour[i] != '-')
-				{
-					temp[tpos++] = sour[i];
-					if (!(++grid % 8))
-						temp[tpos++] = 32;
-				}
-			}
-
-			temp[tpos] = 0;
-			sscanf(temp, "%x %x %x %x",	stAccountLogin.Mac,	&stAccountLogin.Mac[1],	&stAccountLogin.Mac[2],	&stAccountLogin.Mac[3]);
-			free(pInfo);
-		}
-
-		strncpy(stAccountLogin.AccountName, pStd->AccountName, sizeof(pStd->AccountName));
-		strncpy(stAccountLogin.TID, pStd->TID, sizeof(pStd->TID));
-		sprintf(stAccountLogin.AccountPass, "");
-		SendOneMessage((char*)&stAccountLogin, sizeof(stAccountLogin));
-		return 1;
-	}
-
-	m_pMessagePanel->SetMessage(g_pMessageStringTable[8], 4000);
-	m_pMessagePanel->SetVisible(1, 1);
-	if (m_eSceneType != ESCENE_TYPE::ESCENE_LOGIN)
-		g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
-	return 1;
-}
-
-int TMFieldScene::OnPacketCNFAccountLogin(MSG_CNFRemoveServerLogin* pStd)
-{
-	memcpy(&g_pObjectManager->m_stSelCharData, &pStd->SelChar, sizeof(pStd->SelChar));
-	memcpy(g_pObjectManager->m_stItemCargo, pStd->Cargo, sizeof(pStd->Cargo));
-	g_pObjectManager->m_nCargoCoin = pStd->Coin;
-	memset(g_pObjectManager->m_stMemo, 0, sizeof(g_pObjectManager->m_stMemo));
-
-	/*for (int i = 0; i < 16; ++i)
-		g_pSocketManager->SendQueue[i] = *((unsigned char*)&pStd->Tick + i + 4);*/
-
-	g_pSocketManager->SendCount = 0;
-	g_pSocketManager->RecvCount = 0;
-	return 1;
-}
-
 int TMFieldScene::OnPacketCNFCharacterLogin(MSG_CNFCharacterLogin* pStd)
 {
 	m_pMessagePanel->SetVisible(0, 1);
@@ -19935,7 +19611,7 @@ int TMFieldScene::OnPacketSetHpMode(MSG_SetHpMode* pStd)
 			m_pMessagePanel->SetVisible(1, 1);
 		}
 
-		g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_SELECTSERVER_STATE);
+		g_pObjectManager->SetCurrentState(ObjectManager::TM_GAME_STATE::TM_LOGIN_STATE);
 		return 1;
 	}
 	else if (pStd->Mode == 22)
@@ -22615,7 +22291,7 @@ int TMFieldScene::Guildmark_Create(stGuildMarkInfo* pMark)
 void TMFieldScene::Guildmark_MakeFileName(char* szStr, int nGuild, int nChief, int nChannel)
 {
 	if (szStr)
-		sprintf(szStr, "%c%02d%02d%04d.bmp", 'c', g_pObjectManager->m_nServerGroupIndex, nChannel, nGuild);
+		sprintf(szStr, "%c%02d%02d%04d.bmp", 'c', 0, nChannel, nGuild);
 }
 
 int TMFieldScene::Guildmark_Find_ArrayIndex(int nGuild)
@@ -23213,7 +22889,6 @@ int TMFieldScene::AirMove_ShowUI(bool bShow)
 		auto pPGTPanel = m_pPGTPanel;
 		auto pSystemPanel = m_pSystemPanel;
 		auto pGambleStore = m_pGambleStore;
-		auto pServerPanel = m_pServerPanel;
 		auto pPotalPanel = m_pPotalPanel;
 		if (g_bActiveWB == 1)
 		{
@@ -23266,8 +22941,6 @@ int TMFieldScene::AirMove_ShowUI(bool bShow)
 			m_pHelpBtn->SetSelected(0);
 			GetSoundAndPlay(51, 0, 0);
 		}
-		else if (pServerPanel && pServerPanel->IsVisible() == 1)
-			pServerPanel->SetVisible(0);
 		else if (pPotalPanel && pPotalPanel->IsVisible() == 1)
 			pPotalPanel->SetVisible(0);
 		else if (m_pMessageBox && m_pMessageBox->IsVisible() == 1)

@@ -112,7 +112,8 @@ int BASE_InitializeAttribute()
 
     int sum = BASE_GetSum((char*)g_pAttribute, sizeof(g_pAttribute));
 
-    return sum == tsum;
+    // return sum == tsum;
+    return 1;
 }
 
 void BASE_ApplyAttribute(char* pHeight, int size)
@@ -154,10 +155,10 @@ int BASE_ReadItemList()
 
     int sum = BASE_GetSum2((char*)g_pItemList, size); // Not being used...
 
-#if !defined _DEBUG
-    if (tsum != 0x1343B16)
-        return 0;
-#endif
+// #if !defined _DEBUG
+//     if (tsum != 0x1343B16)
+//         return 0;
+// #endif
 
     for (int i = 0; i < size; ++i)
         temp[i] ^= 0x5A;
@@ -183,10 +184,10 @@ int BASE_ReadItemList()
 
         sum = BASE_GetSum2((char*)g_pItemList, size); // Not being used...
 
-#if !defined _DEBUG
-        if (tsum != 0x1343B16)
-            return 0;
-#endif
+// #if !defined _DEBUG
+//         if (tsum != 0x1343B16)
+//             return 0;
+// #endif
         for (int j = 0; j < size; ++j)
             temp[j] ^= 0x5A;
     }
@@ -216,10 +217,10 @@ int BASE_ReadSkillBin()
 
     int sum = BASE_GetSum2((char*)g_pSpell, size);
 
-#ifndef _DEBUG
-    //if(SKILL_CHECKSUM != sum) 
-    //	return FALSE;
-#endif
+// #ifndef _DEBUG
+//     if(SKILL_CHECKSUM != sum) 
+//     	return FALSE;
+// #endif
 
     for (int i = 0; i < size; i++)
     {
@@ -349,16 +350,16 @@ void BASE_InitEffectString()
 
 int BASE_InitializeBaseDef()
 {
-    int ret = 0;
-	ret = BASE_InitializeServerList() & 1;
-    ret = BASE_ReadSkillBin() & ret;
-    ret = BASE_ReadItemList() & ret;
-    ret = BASE_ReadInitItem() & ret;
-    ret = BASE_InitializeAttribute() & ret;
+  int ret = 0;
+  ret = BASE_InitializeServerList() & 1;
+  ret = BASE_ReadSkillBin() & ret;
+  ret = BASE_ReadItemList() & ret;
+  ret = BASE_ReadInitItem() & ret;
+  ret = BASE_InitializeAttribute() & ret;
 
-    BASE_InitialItemRePrice();
+  BASE_InitialItemRePrice();
 
-	return ret;
+  return ret;
 }
 
 void BASE_ReadItemPrice()

@@ -902,7 +902,7 @@ void ObjectManager::InitAniSoundTable()
 					&g_MobAniTable[nObjType].dwAniTable[j],
 					&g_MobAniTable[nObjType].dwSpeed[j],
 					&g_MobAniTable[nObjType].dwSoundTable[j]);
-			}			
+			}
 		}
 	}
 

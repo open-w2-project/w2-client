@@ -997,7 +997,6 @@ int TMFieldScene::InitializeScene()
 
 	if (m_pMainInfo2)
 	{
-		m_pMainInfo2->SetAutoSize();
 		m_pMainInfo2->SetStickLeft();
 		m_pMainInfo2->SetStickTop();
 		m_pMainInfo2_Name = (SText*)m_pControlContainer->FindControl(65611);
@@ -1876,8 +1875,7 @@ int TMFieldScene::InitializeScene()
 	if (pPartyPanel)
 	{
 		pPartyPanel->SetStickLeft();
-		pPartyPanel->SetStickTop();
-		pPartyPanel->m_nPosY = pPartyPanel->m_nPosY + 135.0f;
+		pPartyPanel->SetStickTop((int)(135.0f * g_fUIScale));
 	}
 
 	if (m_pPartyBtn)
@@ -16252,33 +16250,13 @@ void TMFieldScene::SetButtonTextXY(SButton* pButton)
 {
 	if (m_pSystemPanel && pButton)
 	{
-		TMVector2 vecXY{};
 		auto vec = pButton->GetPos();
 
-		int nLen = strlen(pButton->m_GCPanel.pFont->m_szString);
-		if (RenderDevice::m_fWidthRatio == 0.80000001f)
-		{
-			vecXY.x = 43.0f - ((float)(nLen - 1) * 3.0f);
-			vecXY.y = 2.0f;
-		}
-		else if (RenderDevice::m_fWidthRatio == 1.28f)
-		{
-			vecXY.x = 66.0f - ((float)(nLen - 1) * 4.0f);
-			vecXY.y = 5.0f;
-		}
-		else if (RenderDevice::m_fWidthRatio == 1.6f)
-		{
-			vecXY.x = 75.0f - ((float)(nLen - 1) * 5.0f);
-			vecXY.y = 5.0f;
-		}
-		else if (RenderDevice::m_fWidthRatio == 2.0f)
-		{
-			vecXY.x = 90.0f - ((float)(nLen - 1) * 5.0f);
-			vecXY.y = 5.0f;
-		}
-
-		pButton->m_GCPanel.pFont->m_nPosX = (int)((m_pSystemPanel->m_nPosX + vec.x) + vecXY.x);
-		pButton->m_GCPanel.pFont->m_nPosY = (int)((m_pSystemPanel->m_nPosY + vec.y) + vecXY.y);
+		// The per-resolution label offsets this replaces had no arm for the authored
+		// 800x600 case, which used no offset at all. Uniform scaling makes that the
+		// only case, so the label sits at the button's own position.
+		pButton->m_GCPanel.pFont->m_nPosX = (int)(m_pSystemPanel->m_nPosX + vec.x);
+		pButton->m_GCPanel.pFont->m_nPosY = (int)(m_pSystemPanel->m_nPosY + vec.y);
 	}
 }
 
@@ -17055,7 +17033,7 @@ int TMFieldScene::OnKeyGuildOnOff(char iCharCode, int lParam)
 int TMFieldScene::OnKeyShortSkill(char iCharCode, int lParam)
 {
 	if ((iCharCode < '0' || iCharCode > '9') && iCharCode != '!' && iCharCode != '@' && 
-		iCharCode != '#' && iCharCode != '$' && iCharCode != '%' && iCharCode != '¨' && 
+		iCharCode != '#' && iCharCode != '$' && iCharCode != '%' && iCharCode != 'ï¿½' && 
 		iCharCode != '&' && iCharCode != '*' && iCharCode != '(' && iCharCode != ')')
 	{
 		return 0;
@@ -17092,7 +17070,7 @@ int TMFieldScene::OnKeyShortSkill(char iCharCode, int lParam)
 		case '%':
 			g_pObjectManager->m_cSelectShortSkill = 4;
 			break;
-		case '¨':
+		case 'ï¿½':
 			g_pObjectManager->m_cSelectShortSkill = 5;
 			break;
 		case '&':
@@ -19912,7 +19890,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 		if (pAttacker != m_pMyHuman || pAttack->FlagLocal == 1 && pAttacker == m_pMyHuman || !pAttack->FlagLocal && 
 			pAttacker == m_pMyHuman && (unsigned char)pAttack->Motion == 254)
 		{
-			if (pAttack->SkillIndex == 4) // Possuído
+			if (pAttack->SkillIndex == 4) // Possuï¿½do
 			{
 				pAttacker->m_cPunish = 1;
 				pAttacker->m_dwPunishedTime = g_pTimerManager->GetServerTime();
@@ -19935,7 +19913,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 					fAngle = atan2f(pTarget->m_vecPosition.x - pAttacker->m_vecPosition.x, pTarget->m_vecPosition.y - pAttacker->m_vecPosition.y) + D3DXToRadian(90);
 			}
 
-			if (pAttack->SkillIndex == 98) // Canhão Superior
+			if (pAttack->SkillIndex == 98) // Canhï¿½o Superior
 				fAngle = atan2f((float)pAttack->TargetX - pAttacker->m_vecPosition.x, (float)pAttack->TargetY - pAttacker->m_vecPosition.y) + D3DXToRadian(90);
 			if (pAttack->DoubleCritical & 1)
 				pAttacker->m_bDoubleAttack = 1;
@@ -20005,7 +19983,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 				if (pEffect && m_pEffectContainer)
 					m_pEffectContainer->AddChild(pEffect);
 			}
-			else if (pAttack->SkillIndex == 3) // Perseguição
+			else if (pAttack->SkillIndex == 3) // Perseguiï¿½ï¿½o
 			{
 				if (pAttacker)
 				{
@@ -20032,7 +20010,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 					GetSoundAndPlay(151, 0, 0);
 				}
 			}
-			else if (pAttack->SkillIndex == 45) // Arma Mágica
+			else if (pAttack->SkillIndex == 45) // Arma Mï¿½gica
 			{
 				float fY = (float)pAttack->TargetY + 0.5f;
 				TMVector3 vecTarget{ (float)pAttack->TargetX + 0.5f, (float)GroundGetMask(TMVector2((float)pAttack->TargetX + 0.5f, fY)) * 0.1f, fY };
@@ -20290,7 +20268,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 			{
 				GetSoundAndPlay(34, 0, 0);
 			}
-			else if (pAttack->SkillIndex == 77) // Meditação
+			else if (pAttack->SkillIndex == 77) // Meditaï¿½ï¿½o
 			{
 				GetSoundAndPlay(36, 0, 0);
 			}
@@ -20330,7 +20308,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 					}
 				}
 			}
-			else if (pAttack->SkillIndex == 86) // Explosão Etérea
+			else if (pAttack->SkillIndex == 86) // Explosï¿½o Etï¿½rea
 			{
 				if (pAttacker)
 				{
@@ -20510,7 +20488,7 @@ int TMFieldScene::OnPacketAttack(MSG_STANDARD* pStd)
 
 				GetSoundAndPlay(1, 0, 0);
 			}
-			else if (pAttack->SkillIndex == 100) // Ressureição
+			else if (pAttack->SkillIndex == 100) // Ressureiï¿½ï¿½o
 			{
 				GetSoundAndPlay(156, 0, 0);
 			}

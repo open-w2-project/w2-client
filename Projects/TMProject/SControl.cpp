@@ -28,12 +28,10 @@ SControl::SControl(float inPosX, float inPosY, float inWidth, float inHeight)
 	m_pEventListener = nullptr;
 	m_bModal = 0;
 
-	float fWidthRatio = (float)g_pDevice->m_dwScreenWidth / 800.0f;
-	float fHeightRatio = (float)g_pDevice->m_dwScreenHeight / 600.0f;
-	m_nPosX = inPosX * fWidthRatio;
-	m_nPosY = inPosY * fHeightRatio;
-	m_nWidth = inWidth * fWidthRatio;
-	m_nHeight = inHeight * fHeightRatio;
+	m_nPosX = inPosX * g_fUIScale;
+	m_nPosY = inPosY * g_fUIScale;
+	m_nWidth = inWidth * g_fUIScale;
+	m_nHeight = inHeight * g_fUIScale;
 	m_dwUniqueID = SControl::m_dwStaticID++;
 }
 
@@ -178,36 +176,85 @@ void SControl::SetRealSize(float nWidth, float nHeight)
 	m_nHeight = nHeight;
 }
 
-void SControl::SetAutoSize()
+// The stick helpers write screen coordinates, so they are only meaningful on a
+// top-level control. Child positions are offsets from their parent's origin.
+void SControl::SetStickLeft(int nMargin)
 {
-	m_nPosX = (float)(m_nPosX / 800.0f) * (float)g_pDevice->m_dwScreenWidth;
-	m_nPosY = (float)(m_nPosY / 600.0f) * (float)g_pDevice->m_dwScreenHeight;
+	m_nPosX = (float)nMargin;
 }
 
-void SControl::SetCenterSize()
+void SControl::SetStickRight(int nMargin)
 {
-	m_nPosX = (float)((g_pDevice->m_dwScreenWidth - 800) >> 1) + m_nPosX;
-	m_nPosY = (float)((g_pDevice->m_dwScreenHeight - 600) >> 1) + m_nPosY;
+	m_nPosX = (float)g_pDevice->m_dwScreenWidth - m_nWidth - (float)nMargin;
 }
 
-void SControl::SetStickLeft()
+void SControl::SetStickTop(int nMargin)
 {
-	m_nPosX = 0.0f;
+	m_nPosY = (float)nMargin;
 }
 
-void SControl::SetStickRight()
+void SControl::SetStickBottom(int nMargin)
 {
-	m_nPosX = (float)g_pDevice->m_dwScreenWidth - m_nWidth;
+	m_nPosY = (float)g_pDevice->m_dwScreenHeight - m_nHeight - (float)nMargin;
 }
 
-void SControl::SetStickTop()
+// Anchor overrides for controls the derived rule below places wrong. Empty until
+// running the client turns one up; add a case per control ID that needs one.
+// nAnchorX: -1 left, 0 centre, 1 right. nAnchorY: -1 top, 0 centre, 1 bottom.
+static int GetAnchorOverride(unsigned int dwControlID, int& nAnchorX, int& nAnchorY)
 {
-	m_nPosY = 0.0f;
+	(void)dwControlID;
+	(void)nAnchorX;
+	(void)nAnchorY;
+	return 0;
 }
 
-void SControl::SetStickBottom()
+// Anchors a top-level control to a screen edge, derived from where it was authored
+// in the 800x600 design space: a control whose centre falls in the outer third of an
+// axis anchors to that edge, otherwise it centres on that axis.
+//
+// Only valid on a top-level control. Children are positioned relative to their
+// parent, so anchoring a parent carries its whole subtree with it in both rendering
+// and hit-testing, and anchoring a child would corrupt its offset.
+void SControl::AnchorToScreen()
 {
-	m_nPosY = (float)g_pDevice->m_dwScreenHeight - m_nHeight;
+	if (g_pDevice == nullptr || g_fUIScale <= 0.0f)
+		return;
+
+	const float fAuthoredCentreX = (m_nPosX + m_nWidth * 0.5f) / g_fUIScale;
+	const float fAuthoredCentreY = (m_nPosY + m_nHeight * 0.5f) / g_fUIScale;
+
+	int nAnchorX = 0;
+	int nAnchorY = 0;
+
+	if (fAuthoredCentreX < 800.0f / 3.0f)
+		nAnchorX = -1;
+	else if (fAuthoredCentreX > 800.0f * 2.0f / 3.0f)
+		nAnchorX = 1;
+
+	if (fAuthoredCentreY < 600.0f / 3.0f)
+		nAnchorY = -1;
+	else if (fAuthoredCentreY > 600.0f * 2.0f / 3.0f)
+		nAnchorY = 1;
+
+	GetAnchorOverride(m_dwControlID, nAnchorX, nAnchorY);
+
+	// Shift by the screen space the design does not fill. Left and top anchoring is
+	// no shift at all, because authored coordinates already run from the top-left.
+	// Shifting rather than snapping keeps the authored inset from the edge and the
+	// relative layout of everything sharing an anchor.
+	const float fExtraX = (float)g_pDevice->m_dwScreenWidth - 800.0f * g_fUIScale;
+	const float fExtraY = (float)g_pDevice->m_dwScreenHeight - 600.0f * g_fUIScale;
+
+	if (nAnchorX > 0)
+		m_nPosX += fExtraX;
+	else if (nAnchorX == 0)
+		m_nPosX += fExtraX * 0.5f;
+
+	if (nAnchorY > 0)
+		m_nPosY += fExtraY;
+	else if (nAnchorY == 0)
+		m_nPosY += fExtraY * 0.5f;
 }
 
 int SControl::PtInControl(int inPosX, int inPosY)
@@ -218,22 +265,6 @@ int SControl::PtInControl(int inPosX, int inPosY)
 CONTROL_TYPE SControl::GetControlType()
 {
 	return CONTROL_TYPE::CTRL_TYPE_NONE;
-}
-
-void SControl::SetCenterPos(unsigned int dwControlID, float inPosX, float inPosY, float inWidth, float inHeight)
-{
-	if (g_pDevice == nullptr)
-		return;
-
-	static unsigned int dwCenterUI[6] = { 769, 4622, 65870, 4617, 5638, 0 };
-
-	for (int i = 0; i < 5; ++i)
-	{
-		if (dwControlID == dwCenterUI[i])
-		{
-			m_nPosX = ((float)g_pDevice->m_dwScreenWidth * 0.5f) - inWidth * 0.5f;
-		}
-	}
 }
 
 SPanel::SPanel(int inTextureSetIndex, float inX, float inY, float inWidth, float inHeight, unsigned int idwColor, RENDERCTRLTYPE eRenderType)
@@ -373,8 +404,8 @@ void SPanel::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int inPare
 		m_GCPanel.nLayer = inParentLayer;
 		if ((float)(m_GCPanel.nPosX + m_GCPanel.nWidth) >= 0.0f && 
 			(float)(m_GCPanel.nPosY + m_GCPanel.nHeight) >= 0.0f &&
-			m_GCPanel.nPosX <= (float)(800.0 * RenderDevice::m_fWidthRatio) && 
-			m_GCPanel.nPosY <= (float)(600.0 * RenderDevice::m_fHeightRatio))
+			m_GCPanel.nPosX <= (float)g_pDevice->m_dwScreenWidth &&
+			m_GCPanel.nPosY <= (float)g_pDevice->m_dwScreenHeight)
 		{
 			AddRenderControlItem(pDrawList, &m_GCPanel, inParentLayer);
 		}
@@ -853,8 +884,8 @@ void SText::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int inParen
 
 		if ((float)(m_GCBorder.nPosX + m_GCBorder.nWidth) < 0.0f || 
 			(float)(m_GCBorder.nPosY + m_GCBorder.nHeight) < 0.0f ||
-			m_GCBorder.nPosX > (float)(800.0f * RenderDevice::m_fWidthRatio) ||
-			m_GCBorder.nPosY > (float)(600.0f * RenderDevice::m_fHeightRatio))
+			m_GCBorder.nPosX > (float)g_pDevice->m_dwScreenWidth ||
+			m_GCBorder.nPosY > (float)g_pDevice->m_dwScreenHeight)
 		{
 			return;
 		}
@@ -955,8 +986,8 @@ void SText::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int inParen
 
 	if ((float)(m_GCText.nPosX + m_GCText.nWidth) >= 0.0f && 
 		(float)(m_GCText.nPosY + m_GCText.nHeight) >= 0.0f &&
-		m_GCText.nPosX <= (float)(800.0f * RenderDevice::m_fWidthRatio) && 
-		m_GCText.nPosY <= (float)(600.0f * RenderDevice::m_fHeightRatio))
+		m_GCText.nPosX <= (float)g_pDevice->m_dwScreenWidth &&
+		m_GCText.nPosY <= (float)g_pDevice->m_dwScreenHeight)
 	{		
 		AddRenderControlItem(pDrawList, &m_GCText, inParentLayer);
 
@@ -1793,9 +1824,6 @@ void SProgressBar::Update()
 
 void SProgressBar::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int inParentLayer, int nFlag)
 {
-	float fWidthRatio = (float)g_pDevice->m_dwScreenWidth / 800.0f;
-	float fHeightRatio = (float)g_pDevice->m_dwScreenHeight / 600.0f;
-
 	SPanel::FrameMove2(pDrawList, ivParentPos, inParentLayer, nFlag);
 
 	if (m_dwStyle == 1)
@@ -1814,7 +1842,7 @@ void SProgressBar::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int 
 
 		auto pUISet = g_pTextureManager->GetUITextureSet(nTextureSetIndex);
 		if (pUISet != nullptr)
-			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nWidth = (int)(m_nProgressWidth / fWidthRatio);
+			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nWidth = (int)(m_nProgressWidth / g_fUIScale);
 
 		m_GCProgress.nPosX = (float)(ivParentPos.x + m_nPosX) + 2.0f;
 		m_GCProgress.nPosY = (float)(ivParentPos.y + m_nPosY) + 2.0f;
@@ -1831,8 +1859,8 @@ void SProgressBar::FrameMove2(stGeomList* pDrawList, TMVector2 ivParentPos, int 
 		auto pUISet = g_pTextureManager->GetUITextureSet(nIndex);
 		if (pUISet != nullptr)
 		{
-			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nHeight = (int)(m_nProgressHeight / fHeightRatio);
-			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nStartY = (int)(((m_nHeight - m_nProgressHeight) / fHeightRatio) + m_InitStartY);
+			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nHeight = (int)(m_nProgressHeight / g_fUIScale);
+			pUISet->pTextureCoord[m_GCProgress.nTextureIndex].nStartY = (int)(((m_nHeight - m_nProgressHeight) / g_fUIScale) + m_InitStartY);
 		}
 
 		m_GCProgress.nPosX = ivParentPos.x + m_nPosX;
@@ -2434,11 +2462,8 @@ void SListBox::SetSize(float nWidth, float nHeight)
 
 void SListBox::SetPickSize(float nWidth, float nHeight)
 {
-	float fWidthRatio = g_UIVer == 2 ? 1.0f : RenderDevice::m_fWidthRatio;
-	float fHeightRatio = g_UIVer == 2 ? 1.0f : RenderDevice::m_fHeightRatio;
-
-	m_fPickWidth = nWidth * fWidthRatio;
-	m_fPickHeight = nHeight * fHeightRatio;
+	m_fPickWidth = nWidth * g_fUIScale;
+	m_fPickHeight = nHeight * g_fUIScale;
 }
 
 void SListBox::SetEditable()
@@ -2625,7 +2650,10 @@ SMessageBox::SMessageBox(const char* istrMessage, char ibyMessageBoxType, float 
 	m_dwControlID = 4617;
 	m_dwMessage = -1;
 
-	SetCenterPos(m_dwControlID, inX, inY, 256.0f * RenderDevice::m_fWidthRatio, 172.0f * RenderDevice::m_fWidthRatio);
+	// Centres horizontally on screen, as the control-ID whitelist this replaces did
+	// for this box's ID.
+	if (g_pDevice)
+		m_nPosX = ((float)g_pDevice->m_dwScreenWidth - m_nWidth) * 0.5f;
 
 	m_pPanel1 = new SPanel(501, 0.0, 0.0, 256.0f, 172.0f, 0x77777777, RENDERCTRLTYPE::RENDER_IMAGE_STRETCH);
 	m_pMessage = new SText(-1, istrMessage, 0xFFFFFFFF, 20.0f, 36.0f, (float)strlen(istrMessage) * 6.0f, 52.0f, -1, 1, 0, 0);

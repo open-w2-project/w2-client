@@ -16,10 +16,6 @@
 #include <winnt.h>
 
 int RenderDevice::m_nBright = 50;
-DWORD RenderDevice::m_dwCurrScreenX = 1024;
-DWORD RenderDevice::m_dwCurrScreenY = 768;
-DWORD RenderDevice::m_dwCurrBpp = 32;
-DWORD RenderDevice::m_dwCurrRefreshRate = 60;
 int RenderDevice::m_nFontSize = 12;
 int RenderDevice::m_nLargeFontSize = 40;
 int RenderDevice::m_nFontTextureSize = 512;
@@ -61,8 +57,11 @@ RenderDevice::RenderDevice(DWORD dwScreenWidth, DWORD dwScreenHeight, DWORD dwBi
 	m_bSupportPS11 = 0;
 	m_bSupportVS20 = 0;
 
-	RenderDevice::m_fWidthRatio = (float)m_dwScreenWidth / 800.0f;
-	RenderDevice::m_fHeightRatio = (float)m_dwScreenHeight / 600.0f;
+	// Both axes carry the same factor: the interface is scaled uniformly, never
+	// stretched. The two symbols are kept so the call sites that multiply by them
+	// need no change.
+	RenderDevice::m_fWidthRatio = g_fUIScale;
+	RenderDevice::m_fHeightRatio = g_fUIScale;
 
 	m_bSavage = 0;
 
@@ -152,8 +151,9 @@ int RenderDevice::Initialize(HWND hWnd)
 	if (D3DDevice::Initialize(hWnd) != S_OK)
 		return 0;
 
-	if (m_bFull)
-		ToggleFullscreen();
+	// No device toggle for fullscreen: it is a borderless window already sized to the
+	// desktop, so the windowed device is the right one. Toggling would reset the device
+	// into an exclusive-mode configuration that is no longer populated.
 
 	if (m_pTextureManager == nullptr)
 	{
@@ -457,64 +457,6 @@ void RenderDevice::SetLight()
 		if (FAILED(m_pd3dDevice->LightEnable(i, 1)))
 			return;
 	}
-}
-
-void RenderDevice::SetWindowedFullScreen()
-{
-	HDC hDC = CreateDCA("DISPLAY", 0, 0, nullptr);
-	m_dwCurrScreenX = GetDeviceCaps(hDC, HORZRES);
-	m_dwCurrScreenY = GetDeviceCaps(hDC, VERTRES);
-	m_dwCurrBpp = GetDeviceCaps(hDC, BITSPIXEL);
-	m_dwCurrRefreshRate = GetDeviceCaps(hDC, VREFRESH);
-
-	DeleteDC(hDC);
-
-	if (!ChangeDisplay(m_dwScreenWidth, m_dwScreenHeight, m_dwBitCount, RenderDevice::m_dwCurrRefreshRate))
-		ChangeDisplay(m_dwScreenWidth, m_dwScreenHeight, m_dwBitCount, 0);
-}
-
-void RenderDevice::RestoreWindowMode()
-{
-	ChangeDisplay(RenderDevice::m_dwCurrScreenX,
-		RenderDevice::m_dwCurrScreenY,
-		RenderDevice::m_dwCurrBpp,
-		RenderDevice::m_dwCurrRefreshRate);
-}
-
-int RenderDevice::ChangeDisplay(DWORD x, DWORD y, DWORD bpp, DWORD ref)
-{
-	DEVMODE mode;
-	GetCurrentDisplayMode(&mode);
-
-	mode.dmPelsWidth = x;
-	mode.dmPelsHeight = y;
-	mode.dmBitsPerPel = bpp;
-	if (ref)
-		mode.dmDisplayFrequency = ref;
-
-	int lResult = ChangeDisplaySettings(&mode, 0);
-	return lResult == 0 || lResult == 1;
-}
-
-HRESULT RenderDevice::GetCurrentDisplayMode(PDEVMODE devMode)
-{
-	HDC hDC = CreateDCA("DISPLAY", 0, 0, 0);
-	int iOrgX = GetDeviceCaps(hDC, HORZRES);
-	int iOrgY = GetDeviceCaps(hDC, VERTRES);
-	int iOrgBpp = GetDeviceCaps(hDC, BITSPIXEL);
-	GetDeviceCaps(hDC, VREFRESH);
-	DeleteDC(hDC);
-
-	int iModeNum = 0;
-	for (int bResult = EnumDisplaySettings(0, 0, devMode); bResult; bResult = EnumDisplaySettings(0, iModeNum, devMode))
-	{
-		if (devMode->dmPelsWidth == iOrgX && devMode->dmPelsHeight == iOrgY && devMode->dmBitsPerPel == iOrgBpp)
-			return 1;
-
-		++iModeNum;
-	}
-
-	return 0;
 }
 
 HRESULT RenderDevice::ConfirmDevice(D3DCAPS9* pCaps, DWORD dwBehavior, D3DFORMAT Format)
@@ -3169,33 +3111,13 @@ void RenderDevice::RenderGeomRectImage(GeomControl* ipControl)
 				float iY = ipControl->nPosY - 2.0f;
 				float iCX = 2.0f + 18.0f;
 				float iCY = 2.0f + 14.0f;
-				float fWidthRatio = RenderDevice::m_fWidthRatio;
-				float fHeightRatio = RenderDevice::m_fHeightRatio;
 				if (RenderDevice::m_fWidthRatio != 1.0f)
 				{
 					iCX = RenderDevice::m_fWidthRatio * 18.5f;
 					iCY = RenderDevice::m_fHeightRatio * 14.5f;
 				}
-				if (RenderDevice::m_fHeightRatio == 0.8f)
-				{
-					iX = iX - 0.0f;
-					iY = iY + 1.0f;
-				}
-				else if (RenderDevice::m_fHeightRatio == 1.0f)
-				{
-					iX = iX + 0.0f;
-					iY = iY + 0.0f;
-				}
-				else if (RenderDevice::m_fWidthRatio == 1.6f)
-				{
-					iX = iX - 1.0f;
-					iY = iY + 0.0f;
-				}
-				else if (RenderDevice::m_fWidthRatio == 2.0f)
-				{
-					iX = iX - 1.0f;
-					iY = iY + 0.0f;
-				}
+				// The per-resolution nudges this replaces were no-ops in the authored
+				// 800x600 arm, which uniform scaling makes the only case.
 				if (ipControl->nMarkLayout == 1)
 				{
 					RenderRectNoTex(
@@ -3222,11 +3144,11 @@ void RenderDevice::RenderGeomRectImage(GeomControl* ipControl)
 					0.0,
 					16.0,
 					12.0,
-					ipControl->nPosX - (float)((float)(16.0f * fWidthRatio) - 16.0f),
-					ipControl->nPosY - (float)((float)(12.0f * fHeightRatio) - 12.0f),
+					ipControl->nPosX - (float)((float)(16.0f * RenderDevice::m_fWidthRatio) - 16.0f),
+					ipControl->nPosY - (float)((float)(12.0f * RenderDevice::m_fHeightRatio) - 12.0f),
 					g_pTextureManager->m_stGuildMark[nMarkIndex].pTexture,
-					fWidthRatio,
-					fHeightRatio);
+					RenderDevice::m_fWidthRatio,
+					RenderDevice::m_fHeightRatio);
 				g_pTextureManager->m_stGuildMark[nMarkIndex].dwLastRenderTime = timeGetTime();
 			}
 		}
@@ -3274,12 +3196,9 @@ void RenderDevice::RenderGeomControl(GeomControl* ipControl)
 		case RENDERCTRLTYPE::RENDER_SHADOW:
 			if (ipControl->pFont)
 			{
-				int nUp = 0;
-				if (m_dwScreenWidth == 640)
-					nUp = -1;
 				ipControl->pFont->Render(
 					(int)ipControl->nPosX,
-					(int)ipControl->nPosY + nUp,
+					(int)ipControl->nPosY,
 					(int)ipControl->eRenderType);
 			}
 			break;
@@ -3293,21 +3212,18 @@ void RenderDevice::RenderGeomControl(GeomControl* ipControl)
 				int nLength = strlen(ipControl->strString);
 				if (nLength > 0 && nLength < 64 && ipControl->pFont)
 				{
-					int nUp = 0;
-					if (m_dwScreenWidth == 640)
-						nUp = -1;
 					if (ipControl->nTextureSetIndex == 526)
 					{
 						ipControl->pFont->Render(
 							(int)(float)((float)(ipControl->nWidth - (float)(7 * nLength)) + ipControl->nPosX),
-							nUp + (int)(float)((float)(ipControl->nHeight - 12.0) + ipControl->nPosY),
+							(int)(float)((float)(ipControl->nHeight - 12.0) + ipControl->nPosY),
 							(int)ipControl->eRenderType);
 					}
 					else
 					{
 						ipControl->pFont->Render(
 							(int)(float)((float)((float)(ipControl->nWidth - (float)(6 * nLength)) / 2.0f) + ipControl->nPosX),
-							nUp + (int)(float)((float)((float)(ipControl->nHeight - 12.0f) / 2.0f) + ipControl->nPosY),
+							(int)(float)((float)((float)(ipControl->nHeight - 12.0f) / 2.0f) + ipControl->nPosY),
 							(int)ipControl->eRenderType);
 					}
 				}

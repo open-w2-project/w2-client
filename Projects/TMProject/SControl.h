@@ -70,16 +70,14 @@ public:
 
     void SetRealPos(float nPosX, float nPosY);
     void SetRealSize(float nWidth, float nHeight);
-    void SetAutoSize();
-    void SetCenterSize();
-    void SetStickLeft();
-    void SetStickRight();
-    void SetStickTop();
-    void SetStickBottom();
+    void SetStickLeft(int nMargin = 0);
+    void SetStickRight(int nMargin = 0);
+    void SetStickTop(int nMargin = 0);
+    void SetStickBottom(int nMargin = 0);
+    void AnchorToScreen();
     int PtInControl(int inPosX, int inPosY);
 
     virtual CONTROL_TYPE GetControlType();
-    virtual void SetCenterPos(unsigned int dwControlID, float inPosX, float inPosY, float inWidth, float inHeight);
 
 public:
     static unsigned int m_dwStaticID;

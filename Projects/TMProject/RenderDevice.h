@@ -22,10 +22,6 @@ public:
 	virtual int Unlock(int bEnd);
 
 	void SetLight();
-	void SetWindowedFullScreen();
-	void RestoreWindowMode();
-	int ChangeDisplay(DWORD x, DWORD y, DWORD bpp, DWORD ref);
-	HRESULT GetCurrentDisplayMode(PDEVMODE devMode);
 
 	// Check this ConfirmDevice function, maybe is virtual?
 	virtual HRESULT ConfirmDevice(D3DCAPS9* pCaps, DWORD dwBehavior, D3DFORMAT Format);
@@ -142,10 +138,6 @@ public:
 	int m_bSupportVS20;
 	int m_nShadowTextureSize;
 
-	static DWORD m_dwCurrScreenX;
-	static DWORD m_dwCurrScreenY;
-	static DWORD m_dwCurrBpp;
-	static DWORD m_dwCurrRefreshRate;
 
 	float m_fFPS;
 

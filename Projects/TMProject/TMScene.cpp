@@ -353,11 +353,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			}
 
 			pPanel->SetControlID(binPanelData.nID);
-			pPanel->SetCenterPos(binPanelData.nID,
-				(float)binPanelData.nStartX,
-				(float)binPanelData.nStartY,
-				(float)binPanelData.nWidth,
-				(float)binPanelData.nHeight);
 
 			if (binPanelData.nParentID)
 			{
@@ -369,6 +364,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pPanel));
+				pPanel->AnchorToScreen();
 			}
 
 			pPanel->m_bPickable = binPanelData.nPickable;
@@ -403,12 +399,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pGrid->SetControlID(binGridData.nID);
 
-			pGrid->SetCenterPos(binGridData.nID,
-				(float)binGridData.nStartX,
-				(float)binGridData.nStartY,
-				(float)binGridData.nWidth,
-				(float)binGridData.nHeight);
-
 			if (m_pControlContainer)
 				pGrid->SetEventListener(static_cast<IEventListener*>(m_pControlContainer));
 			else
@@ -424,6 +414,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pGrid));
+				pGrid->AnchorToScreen();
 			}
 		}
 		break;
@@ -451,11 +442,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			}
 
 			p3DObj->SetControlID(bin3DObjData.nID);
-			p3DObj->SetCenterPos(bin3DObjData.nID,
-				(float)bin3DObjData.nStartX,
-				(float)bin3DObjData.nStartY,
-				(float)bin3DObjData.nWidth,
-				(float)bin3DObjData.nHeight);
 
 			if (bin3DObjData.nParentID)
 			{
@@ -467,6 +453,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(p3DObj));
+				p3DObj->AnchorToScreen();
 			}
 		}
 		break;
@@ -503,12 +490,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pButton->SetControlID(binButtonData.nID);
 
-			pButton->SetCenterPos(binButtonData.nID,
-				(float)binButtonData.nStartX,
-				(float)binButtonData.nStartY,
-				(float)binButtonData.nWidth,
-				(float)binButtonData.nHeight);
-
 			if (binButtonData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binButtonData.nParentID);
@@ -519,6 +500,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pButton));
+				pButton->AnchorToScreen();
 			}
 
 			if (m_pControlContainer)
@@ -563,12 +545,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pText->SetControlID(binTextData.nID);
 
-			pText->SetCenterPos(binTextData.nID,
-				(float)binTextData.nStartX,
-				(float)binTextData.nStartY,
-				(float)binTextData.nWidth,
-				(float)binTextData.nHeight);
-
 			if (binTextData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binTextData.nParentID);
@@ -579,6 +555,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pText));
+				pText->AnchorToScreen();
 			}
 		}
 		break;
@@ -616,12 +593,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pEdit->SetControlID(binEditData.nID);
 
-			pEdit->SetCenterPos(binEditData.nID,
-				(float)binEditData.nStartX,
-				(float)binEditData.nStartY,
-				(float)binEditData.nWidth,
-				(float)binEditData.nHeight);
-
 			if (binEditData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binEditData.nParentID);
@@ -632,6 +603,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pEdit));
+				pEdit->AnchorToScreen();
 			}
 
 			if (m_pControlContainer)
@@ -671,12 +643,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pProgress->SetControlID(binProgressData.nID);
 
-			pProgress->SetCenterPos(binProgressData.nID,
-				(float)binProgressData.nStartX,
-				(float)binProgressData.nStartY,
-				(float)binProgressData.nWidth,
-				(float)binProgressData.nHeight);
-
 			if (binProgressData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binProgressData.nParentID);
@@ -687,6 +653,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pProgress));
+				pProgress->AnchorToScreen();
 			}
 
 			if (m_pControlContainer)
@@ -722,12 +689,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pCheckBox->SetControlID(binCheckBoxData.nID);
 
-			pCheckBox->SetCenterPos(binCheckBoxData.nID,
-				(float)binCheckBoxData.nStartX,
-				(float)binCheckBoxData.nStartY,
-				(float)binCheckBoxData.nWidth,
-				(float)binCheckBoxData.nHeight);
-
 			if (binCheckBoxData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binCheckBoxData.nParentID);
@@ -738,6 +699,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pCheckBox));
+				pCheckBox->AnchorToScreen();
 			}
 
 			if (m_pControlContainer)
@@ -779,12 +741,6 @@ int TMScene::ReadRCBin(char* szBinFileName)
 
 			pListBox->SetControlID(binListBoxData.nID);
 
-			pListBox->SetCenterPos(binListBoxData.nID,
-				(float)binListBoxData.nStartX,
-				(float)binListBoxData.nStartY,
-				(float)binListBoxData.nWidth,
-				(float)binListBoxData.nHeight);
-
 			if (binListBoxData.nParentID)
 			{
 				auto pParent = m_pControlContainer->FindControl(binListBoxData.nParentID);
@@ -795,6 +751,7 @@ int TMScene::ReadRCBin(char* szBinFileName)
 			else
 			{
 				m_pControlContainer->AddItem(static_cast<SControl*>(pListBox));
+				pListBox->AnchorToScreen();
 			}
 
 			if (m_pControlContainer)

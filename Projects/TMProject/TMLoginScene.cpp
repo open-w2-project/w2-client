@@ -137,27 +137,8 @@ int TMLoginScene::InitializeScene()
 	float nHeight = static_cast<float>(g_pDevice->m_dwScreenHeight) * 0.5f - static_cast<float>(m_pLoginPanel->m_nHeight) * 0.5f;
 	m_pLoginPanel->SetPos(static_cast<float>(g_pDevice->m_dwScreenWidth) * 0.5f - m_pLoginPanel->m_nWidth * 0.5f, nHeight);
 
-	if(g_pDevice->m_dwScreenWidth == 1600)
-	{
-		float fWidthRatio = RenderDevice::m_fWidthRatio;
-		float fHeightRatio = RenderDevice::m_fHeightRatio;
-
-		m_pLogoPanels[0]->SetRealPos(400 * fWidthRatio, 10.0f * fHeightRatio);
-		m_pLogoPanels[1]->SetRealPos(400 * fWidthRatio, 10.0f * fHeightRatio);
-		m_pLogoPanels[0]->SetRealSize(256 * fWidthRatio, 256.0f * fHeightRatio);
-		m_pLogoPanels[1]->SetRealSize(256 * fWidthRatio, 256.0f * fHeightRatio);
-	}
-	else
-	{
-		int nAddHeight = 0;
-		if (g_pDevice->m_dwScreenWidth == 1024)
-			nAddHeight = 20;
-		else if (g_pDevice->m_dwScreenWidth == 12180)
-			nAddHeight = 40;
-
-		m_pLogoPanels[0]->SetPos(static_cast<float>(g_pDevice->m_dwScreenWidth) * 0.5f - m_pLogoPanels[0]->m_nWidth, 10.0f * RenderDevice::m_fHeightRatio + static_cast<float>(nAddHeight));
-		m_pLogoPanels[1]->SetPos(static_cast<float>(g_pDevice->m_dwScreenWidth) * 0.5f, 10.0f * RenderDevice::m_fHeightRatio + static_cast<float>(nAddHeight));
-	}
+	m_pLogoPanels[0]->SetPos(static_cast<float>(g_pDevice->m_dwScreenWidth) * 0.5f - m_pLogoPanels[0]->m_nWidth, 10.0f * RenderDevice::m_fHeightRatio);
+	m_pLogoPanels[1]->SetPos(static_cast<float>(g_pDevice->m_dwScreenWidth) * 0.5f, 10.0f * RenderDevice::m_fHeightRatio);
 
 	m_pEditID = static_cast<SEditableText*>(m_pControlContainer->FindControl(E_LOGIN_ID));
 	m_pEditPW = static_cast<SEditableText*>(m_pControlContainer->FindControl(E_LOGIN_PASSWORD));
@@ -952,29 +933,12 @@ int TMLoginScene::FrameMoveGameGrade(unsigned int dwServerTime)
 
 void TMLoginScene::GameGradeScene()
 {
-	float size = 1.0f;
-	if (g_pApp->m_dwScreenWidth <= 1024)
-	{
-		switch (g_pApp->m_dwScreenWidth)
-		{
-		case 1024u:
-			size = 0.79f;
-			break;
-		case 640u:
-			size = 1.25f;
-			break;
-		case 0x320u:
-			size = 1.0f;
-			break;
-		}
-	}
-	else if (g_pApp->m_dwScreenWidth == 1280)
-		size = 0.63f;
-	else if (g_pApp->m_dwScreenWidth == 1600)
-		size = 0.5f;
-
-	m_GameGrade = new SPanel(553, 0.0f, 0.0f, (float)g_pApp->m_dwScreenWidth * size, (float)g_pApp->m_dwScreenHeight * size, 0x77777777u, RENDERCTRLTYPE::RENDER_IMAGE_STRETCH);
+	// The per-width size factors this replaces existed only to cancel the anisotropic
+	// stretch the control constructor used to apply; the result was always a
+	// full-screen panel. SetRealSize sets screen pixels with no scaling applied.
+	m_GameGrade = new SPanel(553, 0.0f, 0.0f, 0.0f, 0.0f, 0x77777777u, RENDERCTRLTYPE::RENDER_IMAGE_STRETCH);
 	m_GameGrade->SetControlID(4623u);
+	m_GameGrade->SetRealSize((float)g_pApp->m_dwScreenWidth, (float)g_pApp->m_dwScreenHeight);
 	m_GameGrade->SetPos(0, 0);
 	
 	if (m_pControlContainer)

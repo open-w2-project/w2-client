@@ -54,6 +54,21 @@ extern int g_nFontBold;
 extern float g_ClipNear;
 extern float g_ClipFar;
 
+// Uniform interface scale, applied to both axes so the 800x600 design is never
+// stretched anisotropically. Pinned to 1.0f; a later change unpins it.
+extern float g_fUIScale;
+
+// Supported display modes: 16:9 first, then 16:10, ascending within each group.
+// The stored configuration holds a 1-based index into this list.
+struct stDisplayMode
+{
+    unsigned int dwWidth;
+    unsigned int dwHeight;
+};
+
+extern const stDisplayMode g_DisplayModeList[];
+extern const int g_nDisplayModeCount;
+
 
 extern char g_UIString[500][64];
 
@@ -62,7 +77,6 @@ extern int g_bHideEffect;
 extern int g_bHideSkillBuffEffect;
 extern int g_bHideSkillBuffEffect2;
 extern int g_nPlayDemo;
-extern int g_UIVer;
 extern int g_nKeyType;
 
 extern int g_HeightWidth;

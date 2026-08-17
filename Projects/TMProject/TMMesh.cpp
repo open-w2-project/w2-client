@@ -282,9 +282,9 @@ int TMMesh::RenderPick(float fX, float fY, float fZ, float fAngle, float fAngle2
 
 int TMMesh::RenderForUI(int nX, int nY, float fAngle, float fScale, DWORD dwColor, int nMultiTex, int nTexOffset, short sLegend)
 {
+	// The 1.26 aspect test this replaces existed only to separate 5:4 from 4:3.
+	// Every supported mode is 1.6 or wider and took this arm already.
 	float fWidthRatio = 6.3f;
-	if (((float)g_pDevice->m_viewport.Width / (float)g_pDevice->m_viewport.Height) < 1.26f)
-		fWidthRatio = 6.26f;
 
 	float fX = (float)nX / (float)((float)g_pDevice->m_viewport.Width / fWidthRatio);
 	float fY = (float)nY / (float)((float)g_pDevice->m_viewport.Height / 4.96f) - 2.48f;

@@ -10,6 +10,16 @@ class TimerManager;
 class ObjectManager;
 class CPSock;
 
+// Bumped when the meaning of any Config slot changes. Config[0] is a 1-based index
+// into g_DisplayModeList, so a stale file silently selects a different resolution:
+// the old and new mode lists are both 11 entries long, and bounds-checking cannot
+// tell them apart. A version mismatch resets the stored settings instead.
+//
+// Deliberately outside the official 76xx sequence the retail updater steps through
+// (7604 and up, one per update package). A value inside that range would be written
+// by a real update and silently accepted here with a different meaning.
+constexpr short CONFIG_VERSION = 20000;
+
 struct SaveUpdatAndConfig
 {
     short Version;
@@ -38,7 +48,6 @@ public:
     DWORD GetHttpRequest(char* httpname, char* Request, int MaxBuffer);
     void MixHelp();
     HRESULT MsgProc(HWND hWnd, DWORD uMsg, DWORD wParam, int lParam);
-    bool CheckResolution(DWORD x, DWORD y, DWORD bpp);
 
     char base_chinaTid(char* TID, char* Id);
 

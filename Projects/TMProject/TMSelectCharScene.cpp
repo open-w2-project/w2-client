@@ -205,11 +205,8 @@ int TMSelectCharScene::InitializeScene()
 
 		m_pSelbackpanel = static_cast<SPanel*>(m_pControlContainer->FindControl(1054274u));
 
-		m_pSelbackpanel->SetStickLeft();
-		m_pSelbackpanel->SetStickBottom();
-
-		m_pSelbackpanel->m_nPosX += (30.0f * RenderDevice::m_fWidthRatio);
-		m_pSelbackpanel->m_nPosY -= (30.0f * RenderDevice::m_fHeightRatio);
+		m_pSelbackpanel->SetStickLeft((int)(30.0f * g_fUIScale));
+		m_pSelbackpanel->SetStickBottom((int)(30.0f * g_fUIScale));
 
 		m_pGuildCaption = static_cast<SText*>(m_pControlContainer->FindControl(1312u));
 		m_pGuildCaption->m_dwAlignType = 1;

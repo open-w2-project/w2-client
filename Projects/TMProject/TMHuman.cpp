@@ -7564,20 +7564,12 @@ void TMHuman::LabelPosition()
                     else
                         vPosInY = vPosInY - (int)((RenderDevice::m_fHeightRatio * 2.0f) * 16.0f);
 
-                    if (1.0 == RenderDevice::m_fHeightRatio)
-                    {
-                        if (m_cMount)
-                            vPosInY -= (int)(RenderDevice::m_fHeightRatio * 8.0f);
-                        else
-                            vPosInY += (int)(RenderDevice::m_fHeightRatio * 10.0f);
-                    }
-                    else if (RenderDevice::m_fHeightRatio >= 1.7)
-                    {
-                        if (m_cMount)
-                            vPosInY += (int)(RenderDevice::m_fHeightRatio * 15.0f);
-                        else
-                            vPosInY -= (int)(RenderDevice::m_fHeightRatio * 6.0f);
-                    }
+                    // Was the authored 800x600 arm of a per-resolution branch; uniform
+                    // scaling makes it the only case.
+                    if (m_cMount)
+                        vPosInY -= (int)(RenderDevice::m_fHeightRatio * 8.0f);
+                    else
+                        vPosInY += (int)(RenderDevice::m_fHeightRatio * 10.0f);
                     if (m_nClass == 56 && !m_stLookInfo.FaceMesh)
                     {
                         m_pTitleProgressBar->SetVisible(1);
@@ -8009,20 +8001,12 @@ void TMHuman::LabelPosition2()
                     else
                         vPosInY = vPosInY - (int)((RenderDevice::m_fHeightRatio * 2.0f) * 16.0f);
 
-                    if (1.0 == RenderDevice::m_fHeightRatio)
-                    {
-                        if (m_cMount)
-                            vPosInY -= (int)(RenderDevice::m_fHeightRatio * 8.0f);
-                        else
-                            vPosInY += (int)(RenderDevice::m_fHeightRatio * 10.0f);
-                    }
-                    else if (RenderDevice::m_fHeightRatio >= 1.7)
-                    {
-                        if (m_cMount)
-                            vPosInY += (int)(RenderDevice::m_fHeightRatio * 15.0f);
-                        else
-                            vPosInY -= (int)(RenderDevice::m_fHeightRatio * 6.0f);
-                    }
+                    // Was the authored 800x600 arm of a per-resolution branch; uniform
+                    // scaling makes it the only case.
+                    if (m_cMount)
+                        vPosInY -= (int)(RenderDevice::m_fHeightRatio * 8.0f);
+                    else
+                        vPosInY += (int)(RenderDevice::m_fHeightRatio * 10.0f);
                     if (m_nClass == 56 && !m_stLookInfo.FaceMesh)
                     {
                         m_pTitleProgressBar->SetVisible(1);

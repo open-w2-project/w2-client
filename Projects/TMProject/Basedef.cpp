@@ -28,7 +28,7 @@ STRUCT_GUILDZONE g_pGuildZone[MAX_GUILDZONE] =
 
 float BASE_ScreenResize(float size)
 {
-	return (float)((float)g_pDevice->m_dwScreenWidth * (float)(size / 800.0f));
+	return size * g_fUIScale;
 }
 
 void BASE_InitModuleDir()

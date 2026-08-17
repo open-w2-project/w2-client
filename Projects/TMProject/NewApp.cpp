@@ -54,9 +54,6 @@ NewApp::NewApp()
 
 NewApp::~NewApp()
 {
-	if (m_bwFullScreen)
-		m_pRenderDevice->RestoreWindowMode();
-
 	LOG_FINALIZELOG();
 }
 
@@ -68,13 +65,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 {
-	struct stRes
-	{
-		unsigned int dwWidth;
-		unsigned int dwHeight;
-		unsigned int dwBit;
-	} stResList[11];
-
 	m_dwColorBit = 16;
 	m_bwFullScreen = 0;
 	g_hInstance = hInstance;
@@ -84,44 +74,10 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 	m_dwColorBit = 16;
 	m_bwFullScreen = nFull;
 	BASE_InitEffectString();
-	stResList[0].dwWidth = 640;
-	stResList[0].dwHeight = 480;
-	stResList[0].dwBit = 32;
-	stResList[1].dwWidth = 800;
-	stResList[1].dwHeight = 600;
-	stResList[1].dwBit = 32;
-	stResList[2].dwWidth = 1024;
-	stResList[2].dwHeight = 768;
-	stResList[2].dwBit = 32;
-	stResList[3].dwWidth = 1280;
-	stResList[3].dwHeight = 1024;
-	stResList[3].dwBit = 32;
-	stResList[4].dwWidth = 1600;
-	stResList[4].dwHeight = 1200;
-	stResList[4].dwBit = 32;
-	stResList[5].dwWidth = 640;
-	stResList[5].dwHeight = 480;
-	stResList[5].dwBit = 32;
-	stResList[6].dwWidth = 800;
-	stResList[6].dwHeight = 600;
-	stResList[6].dwBit = 32;
-	stResList[7].dwWidth = 1024;
-	stResList[7].dwHeight = 768;
-	stResList[7].dwBit = 32;
-	stResList[8].dwWidth = 1280;
-	stResList[8].dwHeight = 1024;
-	stResList[8].dwBit = 32;
-	stResList[9].dwWidth = 1600;
-	stResList[9].dwHeight = 1200;
-	stResList[9].dwBit = 32;
-	stResList[10].dwWidth = 3200;
-	stResList[10].dwHeight = 2400;
-	stResList[10].dwBit = 32;
 
-	int nResIndex = 2;
+	int nResIndex = 1;
 	int nBright = 50;
 	int nCursor = 0;
-	int nClassic = 0;
 	int nMipMap = 30;
 	int nCameraRotate = 0;
 	int nDXT = 0;
@@ -129,18 +85,21 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 
 	SaveUpdatAndConfig Config;
 
+	int bConfigRead = 0;
+
 	FILE* fp = nullptr;
 	fopen_s(&fp, ConfigFile_Path, "rb");
 	if (fp)
 	{
-		fread(&Config, sizeof(Config), 1, fp);
+		bConfigRead = fread(&Config, sizeof(Config), 1, fp) == 1;
 		fclose(fp);
 		fp = nullptr;
 	}
-	else
+
+	if (!bConfigRead)
 	{
-		Config.Version = 7000;
-		Config.Config[0] = 7;
+		Config.Version = CONFIG_VERSION;
+		Config.Config[0] = 1;
 		Config.Config[1] = 2;
 		Config.Config[2] = 0;
 		Config.Config[3] = 0;
@@ -148,16 +107,27 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 		Config.Config[5] = 57;
 		Config.Config[6] = 2;
 		Config.Config[7] = 1;
-		Config.Config[8] = 1;
+		Config.Config[8] = 0;
 		Config.Config[9] = 1;
 		Config.Config[10] = 0;
 		Config.Config[11] = 0;
 		Config.Config[12] = 0;
 		Config.Config[13] = 1;
 	}
+	else if (Config.Version != CONFIG_VERSION)
+	{
+		// Migrate rather than discard. Config[0] is the only slot whose meaning changed
+		// -- it indexes g_DisplayModeList, which this version replaced, so a stale value
+		// would silently pick a different resolution. Every other slot still means what
+		// it always did, so sound, brightness, camera and the windowed flag survive.
+		Config.Version = CONFIG_VERSION;
+		Config.Config[0] = 1;
+	}
 
 	int nWindow = -1;
 	nResIndex = Config.Config[0];
+	if (nResIndex < 1 || nResIndex > g_nDisplayModeCount)
+		nResIndex = 1;
 
 	TMSkinMesh::m_nSmooth = Config.Config[1];
 
@@ -175,14 +145,13 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 
 	g_nPlayDemo = Config.Config[7];
 	nWindow = Config.Config[8];
-	if (Config.Config[8] >= 0)
-	{		 
+	// /w arrives as nFull == 0 and outranks the stored flag, which would otherwise
+	// always overwrite it. Until there is an in-client options screen, the switch is
+	// the only way to ask for a window without hand-writing Config.bin.
+	if (nFull != 0 && Config.Config[8] >= 0)
+	{
 		m_bwFullScreen = nWindow == 0;
 	}
-
-	g_UIVer = Config.Config[9];
-	if (nClassic == 1 || nResIndex == 1 || nResIndex == 6)
-		g_UIVer = 1;
 
 	nCameraRotate = Config.Config[10] > 0;
 	nDXT = Config.Config[11] > 0;
@@ -190,7 +159,6 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 	nCameraView = Config.Config[13];
 	m_nCameraView = Config.Config[13];
 	m_nCameraView = 1;
-	g_UIVer = 2;
 	D3DDevice::m_bDxt = nDXT == 0;
 	RenderDevice::m_bCameraRot = nCameraRotate;
 	D3DDevice::m_nMipMap = nMipMap;
@@ -216,35 +184,47 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 			SetCursor(SCursor::m_hCursor1);
 	}
 
-	m_dwScreenWidth = stResList[nResIndex - 1].dwWidth;
-	m_dwScreenHeight = stResList[nResIndex - 1].dwHeight;
-	m_dwColorBit = stResList[nResIndex - 1].dwBit;
-	if (!CheckResolution(m_dwScreenWidth, m_dwScreenHeight, m_dwColorBit))
+	const DWORD dwWindowedStyle = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
+	const DWORD dwFullScreenStyle = WS_POPUP | WS_VISIBLE;
+
+	const int nDesktopWidth = GetSystemMetrics(SM_CXSCREEN);
+	const int nDesktopHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	if (!m_bwFullScreen)
 	{
-		m_dwScreenWidth = stResList[1].dwWidth;
-		m_dwScreenHeight = stResList[1].dwHeight;
-		m_dwColorBit = stResList[1].dwBit;
+		RECT rcFit;
+		SetRect(&rcFit, 0, 0, g_DisplayModeList[nResIndex - 1].dwWidth, g_DisplayModeList[nResIndex - 1].dwHeight);
+		AdjustWindowRect(&rcFit, dwWindowedStyle, 0);
+
+		// A window larger than the screen cannot be moved or closed. Borderless
+		// fullscreen is the one presentation the user can always get out of.
+		if (rcFit.right - rcFit.left > nDesktopWidth || rcFit.bottom - rcFit.top > nDesktopHeight)
+			m_bwFullScreen = 1;
 	}
 
-	int _nFontSize = 14;
-	switch (m_dwScreenWidth)
+	if (m_bwFullScreen)
 	{
-	case 640:
-		_nFontSize = 10;
-		break;
-	case 800:
-		_nFontSize = 12;
-		break;
-	case 1024:
-		_nFontSize = 14;
-		break;
-	case 1280:
-		_nFontSize = 20;
-		break;
-	default:
-		_nFontSize = 24;
-		break;
+		m_dwScreenWidth = nDesktopWidth;
+		m_dwScreenHeight = nDesktopHeight;
 	}
+	else
+	{
+		m_dwScreenWidth = g_DisplayModeList[nResIndex - 1].dwWidth;
+		m_dwScreenHeight = g_DisplayModeList[nResIndex - 1].dwHeight;
+	}
+
+	HDC hDesktopDC = GetDC(nullptr);
+	m_dwColorBit = GetDeviceCaps(hDesktopDC, BITSPIXEL);
+	ReleaseDC(nullptr, hDesktopDC);
+
+	LOG_WRITELOG("Display: %s %dx%d %dbpp (desktop %dx%d, mode index %d)\r\n",
+		m_bwFullScreen ? "borderless" : "windowed",
+		m_dwScreenWidth, m_dwScreenHeight, m_dwColorBit,
+		nDesktopWidth, nDesktopHeight, nResIndex);
+
+	int _nFontSize = (int)(12.0f * g_fUIScale);
+	if (_nFontSize < 1)
+		_nFontSize = 1;
 
 	RenderDevice::m_nFontSize = _nFontSize;
 	RenderDevice::m_nFontTextureSize = 512;
@@ -265,28 +245,24 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 
 		RegisterClass(&wndClass);
 
-		DWORD dwCreationFlags = 0;
-
-		if (m_bwFullScreen)
-			dwCreationFlags = 0x80000000;
-		else
-			dwCreationFlags = 0x0CA0000; // check what flag is this
-
-		m_dwWindowStyle = dwCreationFlags | 0x10000000;
+		m_dwWindowStyle = m_bwFullScreen ? dwFullScreenStyle : dwWindowedStyle;
 
 		RECT rc;
 		SetRect(&rc, 0, 0, m_dwScreenWidth, m_dwScreenHeight);
 		AdjustWindowRect(&rc, m_dwWindowStyle, 0);
+
+		const int nWindowWidth = rc.right - rc.left;
+		const int nWindowHeight = rc.bottom - rc.top;
 
 		m_hWnd = CreateWindowEx(
 			0,
 			ClassName,
 			m_strWindowTitle,
 			m_dwWindowStyle,
-			0,
-			0,
-			rc.right - rc.left,
-			rc.bottom - rc.top,
+			m_bwFullScreen ? 0 : (nDesktopWidth - nWindowWidth) / 2,
+			m_bwFullScreen ? 0 : (nDesktopHeight - nWindowHeight) / 2,
+			nWindowWidth,
+			nWindowHeight,
 			0,
 			0,
 			hInstance,
@@ -378,9 +354,6 @@ HRESULT NewApp::Initialize(HINSTANCE hInstance, int nFull)
 HRESULT NewApp::InitDevice()
 {
 	m_pRenderDevice = new RenderDevice(m_dwScreenWidth, m_dwScreenHeight, m_dwColorBit, m_bwFullScreen);
-
-	if (m_bwFullScreen)
-		m_pRenderDevice->SetWindowedFullScreen();
 
 	if (!m_pRenderDevice->Initialize(m_hWnd))
 	{
@@ -1280,21 +1253,6 @@ HRESULT NewApp::MsgProc(HWND hWnd, DWORD uMsg, DWORD wParam, int lParam)
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-bool NewApp::CheckResolution(DWORD x, DWORD y, DWORD bpp)
-{
-	int iModeNum = 0;
-	DEVMODE devMode;
-	for (int bResult = EnumDisplaySettings(0, 0, &devMode); bResult; bResult = EnumDisplaySettings(0, iModeNum, &devMode))
-	{
-		if (devMode.dmPelsWidth == x && devMode.dmPelsHeight == y && devMode.dmBitsPerPel == bpp)
-			return true;
-
-		++iModeNum;
-	}
-
-	return false;
-}
-
 char NewApp::base_chinaTid(char* TID, char* Id)
 {
 	return 0;
@@ -1322,7 +1280,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	char szDesc[256]{};
 	GetKeyboardLayoutName(szDesc);
 	
-	if (!strcmp((const char*)lpCmdLine, "/w"))
+	// wWinMain hands us a wide string. Comparing it as narrow bytes reads UTF-16 "/w"
+	// as "/", so the old strcmp could never match and the switch did nothing.
+	if (!_wcsicmp(lpCmdLine, L"/w"))
 		nFull = 0;
 
 	// ?:????????????? KKKKKKKKKKKKKKKKKKKKKKKK

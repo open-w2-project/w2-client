@@ -34,7 +34,6 @@ public:
 		VertexProcessingType vertexProcessingType, D3DFORMAT backBufferFormat);
 	void BuildPresentParamsFromSettings();
 	char FindBestWindowedMode(bool bRequireHAL, bool bRequireREF);
-	char FindBestFullscreenMode(bool bRequireHAL, bool bRequireREF);
 	HRESULT ChooseInitialD3DSettings();
 	HRESULT Initialize3DEnvironment();
 	HRESULT HandlePossibleSizeChange();
@@ -93,7 +92,6 @@ public:
 	char m_strFrameStats[90];
 	bool m_bShowCursorWhenFullscreen;
 	bool m_bClipCursorWhenFullscreen;
-	bool m_bStartFullscreen;
 	int m_nAntiAliasLevel;
 	int m_bSavage;
 	int m_bVoodoo;

@@ -23,6 +23,25 @@ int g_nFontBold = 500;
 float g_ClipNear = 0.69f;
 float g_ClipFar = 540.0f;
 
+float g_fUIScale = 1.0f;
+
+const stDisplayMode g_DisplayModeList[] =
+{
+    { 1280,  720 },
+    { 1366,  768 },
+    { 1600,  900 },
+    { 1920, 1080 },
+    { 2560, 1440 },
+    { 3840, 2160 },
+    { 1280,  800 },
+    { 1440,  900 },
+    { 1680, 1050 },
+    { 1920, 1200 },
+    { 2560, 1600 },
+};
+
+const int g_nDisplayModeCount = sizeof(g_DisplayModeList) / sizeof(g_DisplayModeList[0]);
+
 
 char g_UIString[500][64];
 
@@ -31,7 +50,6 @@ int g_bHideEffect;
 int g_bHideSkillBuffEffect;
 int g_bHideSkillBuffEffect2;
 int g_nPlayDemo = 1;
-int g_UIVer = 2;
 int g_nKeyType;
 
 int g_HeightWidth = 256;

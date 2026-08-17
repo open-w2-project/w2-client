@@ -36,7 +36,6 @@ D3DDevice::D3DDevice()
 	m_strDeviceStats[0] = 0;
 	m_strFrameStats[0] = 0;
 	m_bShowCursorWhenFullscreen = false;
-	m_bStartFullscreen = false;
 	Pause(true);
 	m_bClipCursorWhenFullscreen = true;
 }
@@ -392,137 +391,12 @@ EndWindowedDeviceComboSearch:
 	return true;
 }
 
-char D3DDevice::FindBestFullscreenMode(bool bRequireHAL, bool bRequireREF)
-{
-	// For fullscreen, default to first HAL DeviceCombo that supports the current desktop 
-	// display mode, or any display mode if HAL is not compatible with the desktop mode, or 
-	// non-HAL if no HAL is available
-	D3DDISPLAYMODE adapterDesktopDisplayMode;
-	D3DDISPLAYMODE bestAdapterDesktopDisplayMode;
-	D3DDISPLAYMODE bestDisplayMode;
-	bestAdapterDesktopDisplayMode.Width = 0;
-	bestAdapterDesktopDisplayMode.Height = 0;
-	bestAdapterDesktopDisplayMode.Format = D3DFMT_UNKNOWN;
-	bestAdapterDesktopDisplayMode.RefreshRate = 0;
-
-	D3DAdapterInfo* pBestAdapterInfo = NULL;
-	D3DDeviceInfo* pBestDeviceInfo = NULL;
-	D3DDeviceCombo* pBestDeviceCombo = NULL;
-
-	for (UINT iai = 0; iai < m_d3dEnumeration.m_pAdapterInfoList->Count(); iai++)
-	{
-		D3DAdapterInfo* pAdapterInfo = (D3DAdapterInfo*)m_d3dEnumeration.m_pAdapterInfoList->GetPtr(iai);
-		m_pD3D->GetAdapterDisplayMode(pAdapterInfo->AdapterOrdinal, &adapterDesktopDisplayMode);
-		for (UINT idi = 0; idi < pAdapterInfo->pDeviceInfoList->Count(); idi++)
-		{
-			D3DDeviceInfo* pDeviceInfo = (D3DDeviceInfo*)pAdapterInfo->pDeviceInfoList->GetPtr(idi);
-			if (bRequireHAL && pDeviceInfo->DevType != D3DDEVTYPE_HAL)
-				continue;
-			if (bRequireREF && pDeviceInfo->DevType != D3DDEVTYPE_REF)
-				continue;
-			for (UINT idc = 0; idc < pDeviceInfo->pDeviceComboList->Count(); idc++)
-			{
-				D3DDeviceCombo* pDeviceCombo = (D3DDeviceCombo*)pDeviceInfo->pDeviceComboList->GetPtr(idc);
-				bool bAdapterMatchesBB = (pDeviceCombo->BackBufferFormat == pDeviceCombo->AdapterFormat);
-				bool bAdapterMatchesDesktop = (pDeviceCombo->AdapterFormat == adapterDesktopDisplayMode.Format);
-				if (pDeviceCombo->IsWindowed)
-					continue;
-				// If we haven't found a compatible set yet, or if this set
-				// is better (because it's a HAL, and/or because formats match better),
-				// save it
-				if (pBestDeviceCombo == NULL ||
-					pBestDeviceCombo->DevType != D3DDEVTYPE_HAL && pDeviceInfo->DevType == D3DDEVTYPE_HAL ||
-					pDeviceCombo->DevType == D3DDEVTYPE_HAL && pBestDeviceCombo->AdapterFormat != adapterDesktopDisplayMode.Format && bAdapterMatchesDesktop ||
-					pDeviceCombo->DevType == D3DDEVTYPE_HAL && bAdapterMatchesDesktop && bAdapterMatchesBB)
-				{
-					bestAdapterDesktopDisplayMode = adapterDesktopDisplayMode;
-					pBestAdapterInfo = pAdapterInfo;
-					pBestDeviceInfo = pDeviceInfo;
-					pBestDeviceCombo = pDeviceCombo;
-					if (pDeviceInfo->DevType == D3DDEVTYPE_HAL && bAdapterMatchesDesktop && bAdapterMatchesBB)
-					{
-						// This fullscreen device combo looks great -- take it
-						goto EndFullscreenDeviceComboSearch;
-					}
-					// Otherwise keep looking for a better fullscreen device combo
-				}
-			}
-		}
-	}
-EndFullscreenDeviceComboSearch:
-	if (pBestDeviceCombo == NULL)
-		return false;
-
-	bestDisplayMode.Width = m_dwScreenWidth;
-	bestDisplayMode.Height = m_dwScreenHeight;
-
-	if (m_dwBitCount == 32)
-		bestDisplayMode.Format = D3DFORMAT::D3DFMT_X8R8G8B8;
-	else
-		bestDisplayMode.Format = D3DFORMAT::D3DFMT_R5G6B5;
-
-	bestDisplayMode.RefreshRate = 0;
-	for (UINT idm = 0; idm < pBestAdapterInfo->pDisplayModeList->Count(); idm++)
-	{
-		D3DDISPLAYMODE* pdm = (D3DDISPLAYMODE*)pBestAdapterInfo->pDisplayModeList->GetPtr(idm);
-		if (pdm->Format != pBestDeviceCombo->AdapterFormat)
-			continue;
-		if (pdm->Width == bestAdapterDesktopDisplayMode.Width &&
-			pdm->Height == bestAdapterDesktopDisplayMode.Height &&
-			pdm->RefreshRate == bestAdapterDesktopDisplayMode.RefreshRate)
-		{
-			// found a perfect match, so stop
-			bestDisplayMode = *pdm;
-			break;
-		}
-		else if (pdm->Width == bestAdapterDesktopDisplayMode.Width &&
-			pdm->Height == bestAdapterDesktopDisplayMode.Height &&
-			pdm->RefreshRate > bestDisplayMode.RefreshRate)
-		{
-			// refresh rate doesn't match, but width/height match, so keep this
-			// and keep looking
-			bestDisplayMode = *pdm;
-		}
-		else if (pdm->Width == bestAdapterDesktopDisplayMode.Width)
-		{
-			// width matches, so keep this and keep looking
-			bestDisplayMode = *pdm;
-		}
-		else if (bestDisplayMode.Width == 0)
-		{
-			// we don't have anything better yet, so keep this and keep looking
-			bestDisplayMode = *pdm;
-		}
-	}
-
-	m_d3dSettings.pFullscreen_AdapterInfo = pBestAdapterInfo;
-	m_d3dSettings.pFullscreen_DeviceInfo = pBestDeviceInfo;
-	m_d3dSettings.pFullscreen_DeviceCombo = pBestDeviceCombo;
-	m_d3dSettings.IsWindowed = false;
-	m_d3dSettings.Fullscreen_DisplayMode = bestDisplayMode;
-	if (m_d3dEnumeration.AppUsesDepthBuffer)
-		m_d3dSettings.Fullscreen_DepthStencilBufferFormat = *(D3DFORMAT*)pBestDeviceCombo->pDepthStencilFormatList->GetPtr(0);
-	m_d3dSettings.Fullscreen_MultisampleType = *(D3DMULTISAMPLE_TYPE*)pBestDeviceCombo->pMultiSampleTypeList->GetPtr(0);
-	m_d3dSettings.Fullscreen_MultisampleQuality = 0;
-	m_d3dSettings.Fullscreen_VertexProcessingType = *(VertexProcessingType*)pBestDeviceCombo->pVertexProcessingTypeList->GetPtr(0);
-	m_d3dSettings.Fullscreen_PresentInterval = D3DPRESENT_INTERVAL_DEFAULT;
-
-	m_eFormat = pBestDeviceCombo->AdapterFormat;
-	m_dwMaxStageNum = m_d3dSettings.PDeviceInfo()->Caps.MaxTextureBlendStages;
-	return true;
-}
-
 HRESULT D3DDevice::ChooseInitialD3DSettings()
 {
-	bool bFoundFullscreen = FindBestFullscreenMode(false, false);
-	bool bFoundWindowed = FindBestWindowedMode(false, false);
-
-	if (m_bStartFullscreen && bFoundFullscreen)
-		m_d3dSettings.IsWindowed = false;
-	if (!bFoundWindowed && bFoundFullscreen)
-		m_d3dSettings.IsWindowed = false;
-
-	if (!bFoundFullscreen && !bFoundWindowed)
+	// The client always presents windowed: borderless at the desktop resolution when
+	// fullscreen was asked for, a plain window otherwise. There is no exclusive-mode
+	// device to choose.
+	if (!FindBestWindowedMode(false, false))
 		return D3DAPPERR_NOCOMPATIBLEDEVICES;
 
 	return S_OK;
